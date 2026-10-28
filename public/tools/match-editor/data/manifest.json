@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "tournaments": [
+    {
+      "name": "2026新生杯",
+      "roster": "rosters/tournament-1.json"
+    }
+  ]
+}

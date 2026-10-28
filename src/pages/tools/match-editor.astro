@@ -2,36 +2,42 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="导入赛事报名表，选择球员、编排比赛事件与首发阵容，导出足球赛果图。">
+  <meta name="description" content="选择赛事、球队和球员，编排比赛事件与首发阵容，导出足球赛果图。">
   <title>足球赛果图编辑器 · zajuka</title>
   <link rel="stylesheet" href="./editor.css">
-  <script src="./vendor/xlsx.full.min.js" defer></script>
   <script src="./vendor/fflate.min.js" defer></script>
   <script type="module" src="./editor.mjs"></script>
 </head>
 <body>
   <div class="app">
     <aside class="sidebar" aria-label="比赛编辑面板">
-      <header class="brand"><a href="../../" class="back">← 个人主页</a><h1>⚽ 赛果图编辑器</h1><p>从报名名单，到比赛的每个瞬间</p></header>
+      <header class="brand"><h1>⚽ 赛果图编辑器</h1><p>从报名名单，到比赛的每个瞬间</p></header>
       <div class="controls">
         <section class="card">
-          <div class="section-heading"><h2><span>01</span> 赛事与名单</h2><button id="manage-rosters" class="link-button">导入 / 管理</button></div>
-          <label for="tournament">选择赛事</label><select id="tournament"><option value="">请先导入赛事名单</option></select>
-          <p id="roster-summary" class="hint">支持 Word、Excel、CSV，也可直接粘贴表格。</p>
-          <div class="row"><button id="import-shortcut" class="primary">＋ 导入报名表</button><button id="load-demo" class="secondary">体验示例</button></div>
+          <div class="section-heading"><h2><span>01</span> 赛事与名单</h2></div>
+          <label for="tournament">选择赛事</label><select id="tournament"><option value="">正在加载官方名单…</option></select>
+          <p id="roster-summary" class="hint" role="status">正在读取官方报名名单…</p>
         </section>
         <section class="card">
           <h2><span>02</span> 比赛信息</h2>
           <label for="match-title">比赛标题</label><input id="match-title" maxlength="160" placeholder="例如：2026年新生杯 A组第1轮">
-          <div class="two-columns"><div><label for="home-team">主队</label><select id="home-team"><option value="">选择主队</option></select></div><div><label for="away-team">客队</label><select id="away-team"><option value="">选择客队</option></select></div></div>
+          <div id="official-team-selects" class="two-columns"><div><label for="home-team">主队</label><select id="home-team"><option value="">选择主队</option></select></div><div><label for="away-team">客队</label><select id="away-team"><option value="">选择客队</option></select></div></div>
+          <div id="custom-match-fields" hidden>
+            <div class="two-columns"><div><label for="custom-home-name">主队名称</label><input id="custom-home-name" maxlength="80" placeholder="输入主队名称"></div><div><label for="custom-away-name">客队名称</label><input id="custom-away-name" maxlength="80" placeholder="输入客队名称"></div></div>
+            <div class="two-columns"><div><label for="custom-home-starters">主队首发</label><textarea id="custom-home-starters" rows="11" placeholder="1 张三&#10;2 李四"></textarea></div><div><label for="custom-away-starters">客队首发</label><textarea id="custom-away-starters" rows="11" placeholder="1 王五&#10;2 赵六"></textarea></div></div>
+            <p class="hint">每行一名球员，可写“号码 姓名”或只写姓名。应用后，所有输入球员自动成为首发，并用于比赛事件录入。</p>
+            <button id="apply-custom" class="primary">应用球队与首发</button>
+          </div>
           <div class="score-summary"><span>自动比分</span><strong id="score">0 : 0</strong></div>
           <p class="hint">乌龙球记录在犯规球员所属球队，分数计入对方；“点”表示点球大战，单独显示。</p>
         </section>
         <section class="card">
           <div class="section-heading"><h2><span>03</span> 首发与本场号码</h2><label class="check-inline"><input id="show-lineups" type="checkbox" checked>显示在图中</label></div>
-          <p class="hint">每场填写球员号码，再勾选首发。下方显示上一次比赛的号码，点击“沿用”即可填入；新比赛不会自动沿用。首发按勾选顺序展示。</p>
-          <div class="lineup-tabs" role="tablist" aria-label="首发球队"><button id="home-lineup-tab" role="tab" aria-selected="true" aria-controls="lineup-panel" class="active">主队 <span id="home-count">0 人</span></button><button id="away-lineup-tab" role="tab" aria-selected="false" aria-controls="lineup-panel">客队 <span id="away-count">0 人</span></button></div>
-          <div id="lineup-panel" role="tabpanel" aria-labelledby="home-lineup-tab"><label for="lineup-search" class="sr-only">搜索球员姓名或号码</label><input id="lineup-search" type="search" placeholder="搜索姓名或号码"><div class="lineup-actions"><span id="lineup-count" class="hint"></span><button id="clear-lineup" class="link-button">取消本队首发</button></div><div id="lineup-list" class="lineup-list"></div></div>
+          <div id="lineup-editor">
+            <p class="hint">每场填写球员号码，再勾选首发。下方显示上一次比赛的号码，点击“沿用”即可填入；新比赛不会自动沿用。首发按勾选顺序展示。</p>
+            <div class="lineup-tabs" role="tablist" aria-label="首发球队"><button id="home-lineup-tab" role="tab" aria-selected="true" aria-controls="lineup-panel" class="active">主队 <span id="home-count">0 人</span></button><button id="away-lineup-tab" role="tab" aria-selected="false" aria-controls="lineup-panel">客队 <span id="away-count">0 人</span></button></div>
+            <div id="lineup-panel" role="tabpanel" aria-labelledby="home-lineup-tab"><label for="lineup-search" class="sr-only">搜索球员姓名或号码</label><input id="lineup-search" type="search" placeholder="搜索姓名或号码"><div class="lineup-actions"><span id="lineup-count" class="hint"></span><button id="clear-lineup" class="link-button">取消本队首发</button></div><div id="lineup-list" class="lineup-list"></div></div>
+          </div>
         </section>
         <section class="card">
           <div class="section-heading"><h2><span>04</span> 比赛事件</h2><span id="event-count" class="hint">0 个事件</span></div>
@@ -39,7 +45,7 @@
           <p class="hint">同一时间的事件可拖动排序，也可用 ↑ ↓ 调整。</p>
           <div id="events-list"></div>
         </section>
-        <p id="save-status" class="save-status" role="status">名单、比赛草稿与历史号码仅保存在当前浏览器。</p>
+        <p id="save-status" class="save-status" role="status">比赛草稿与历史号码仅保存在当前浏览器。</p>
       </div>
     </aside>
     <main class="preview">
@@ -47,21 +53,6 @@
       <div class="preview-body"><div class="poster-wrap"><div id="poster"></div><p class="preview-note">导出图片仅包含赛果图，不包含编辑面板。PNG 为 2 倍清晰度。</p></div></div>
     </main>
   </div>
-  <dialog id="roster-dialog" aria-labelledby="roster-dialog-title">
-    <header class="dialog-header"><div><p>ROSTER LIBRARY</p><h2 id="roster-dialog-title">导入与管理报名名单</h2></div><button class="close" data-close aria-label="关闭名单管理">×</button></header>
-    <div class="dialog-body">
-      <p class="hint">报名表只需“姓名”列，每行一名球员；赛事、球队可写在表格中，也可在下方补填。不需要号码列，号码在每场比赛中填写。Word 需为 .docx 表格，旧版 .doc、扫描件和图片不支持。</p>
-      <div class="two-columns"><div><label for="import-tournament">补充赛事名称（表格未填写时）</label><input id="import-tournament" maxlength="80" placeholder="例如：2026年新生杯"></div><div><label for="import-team">补充球队名称（表格未填写时）</label><input id="import-team" maxlength="80" placeholder="例如：信息科学技术学院"></div></div>
-      <div class="file-drop"><label for="roster-file">选择 Word / Excel / CSV 报名表</label><input type="file" id="roster-file" accept=".docx,.xlsx,.xls,.csv,.tsv,.json"><p class="hint">文件在本机解析，不上传服务器。最多 5 MB。</p></div>
-      <div id="sheet-picker" hidden><label for="import-sheet">选择工作表</label><select id="import-sheet"></select></div>
-      <label for="roster-text">或粘贴 Word / Excel 表格、CSV 内容</label><textarea id="roster-text" rows="5" placeholder="赛事,球队,姓名&#10;2026年新生杯,信科,张三&#10;2026年新生杯,物院,李四"></textarea>
-      <div class="row compact"><a href="./报名表模板.csv" download class="link-button">下载 CSV 模板</a><button id="preview-import" class="secondary">预览解析结果</button></div>
-      <div id="import-preview" class="import-preview" role="status">选择文件或粘贴表格后，预览确认再导入。</div>
-      <p class="hint">按“赛事＋球队＋姓名”识别同一球员，重复导入保留本场与历史号码。同队同名请在姓名中添加区分。导入不会自动勾选首发或填写本场号码。</p>
-      <div class="library-header"><h3>已保存的赛事</h3><button id="export-rosters" class="link-button">备份名单与号码记录（JSON）</button></div><div id="library-list"></div>
-    </div>
-    <footer class="dialog-footer"><button class="secondary" data-close>取消</button><button id="confirm-import" class="primary" disabled>确认导入</button></footer>
-  </dialog>
   <dialog id="event-dialog" aria-labelledby="event-dialog-title">
     <header class="dialog-header"><h2 id="event-dialog-title">添加事件</h2><button class="close" data-close aria-label="关闭事件编辑">×</button></header>
     <form id="event-form"><div class="dialog-body">

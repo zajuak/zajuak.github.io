@@ -1,6 +1,7 @@
 // Pure data operations shared by the editor and its regression checks.
 export const TYPES = ['进球', '点球', '乌龙', '助攻', '黄牌', '红牌', '两黄', '射失点球', '换下', '换上'];
 export const ICONS = {进球:'G',点球:'PG',乌龙:'icon_w',助攻:'AS',黄牌:'YC',红牌:'RC',两黄:'YYR',射失点球:'PM',换下:'SO',换上:'SI'};
+export const CUSTOM_TOURNAMENT = '__custom__';
 export const escapeXML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export const key = (...parts) => JSON.stringify(parts);
 export const blankMatch = () => ({id:crypto.randomUUID(),tournament:'',home:'',away:'',title:'',starters:{home:[],away:[]},numbers:{home:{},away:{}},events:[],showLineups:true});
@@ -62,32 +63,6 @@ export function parseDelimited(text) {
   row.push(field.trim());rows.push(row);
   return rows.filter(r=>r.some(Boolean));
 }
-const aliases = {
-  tournament:['赛事','赛事名称','比赛','tournament'], team:['球队','球队名称','队伍','队名','team'],
-  number:['号码','球衣号码','球员号码','背号','number','no','no.'], name:['姓名','球员','球员姓名','name','player']
-};
-const columnType = value => Object.keys(aliases).find(k=>aliases[k].includes(String(value).replace(/\s/g,'').toLowerCase()));
-
-export function rowsToRecords(rows,defaults={}) {
-  const headerIndex = rows.findIndex(row=>row.some(v=>columnType(v)==='name'));
-  if (headerIndex<0) throw new Error('未找到表头：至少需要“姓名”列；赛事和球队也可在导入窗口中填写，号码可以不填。');
-  const columns=rows[headerIndex].map(columnType), records=[];
-  let lastTournament=defaults.tournament?.trim()||'', lastTeam=defaults.team?.trim()||'';
-  for(let i=headerIndex+1;i<rows.length;i++) {
-    const row=rows[i]; if(!row.some(v=>String(v??'').trim()))continue;
-    if(row.length===rows[headerIndex].length && row.every((v,j)=>String(v).trim()===String(rows[headerIndex][j]).trim()))continue;
-    const record={number:''};columns.forEach((type,j)=>{if(type)record[type]=String(row[j]??'').trim();});
-    // Support vertically merged cells in Word/Excel registration sheets.
-    if(record.tournament && record.tournament!==lastTournament) lastTeam=defaults.team?.trim()||'';
-    lastTournament=record.tournament||lastTournament;lastTeam=record.team||lastTeam;
-    record.tournament=lastTournament;record.team=lastTeam;
-    if(!record.name && !record.number)continue;
-    records.push({...record,sourceRow:i+1});
-  }
-  if(!records.length)throw new Error('表格中没有球员名单。');
-  validateRecords(records);
-  return records;
-}
 export function validateRecords(records) {
   const seen=new Set();
   for(const [i,r] of records.entries()) {
@@ -100,18 +75,25 @@ export function validateRecords(records) {
     seen.add(id);
   }
 }
-export function mergeRecords(existing,incoming) {
-  validateRecords(incoming);
-  const merged=new Map(existing.map(r=>[playerId(r),r]));
-  incoming.forEach(r=>{
-    const same=existing.filter(p=>p.tournament===r.tournament && p.team===r.team && p.name===r.name);
-    if(!r.id && same.length>1)throw new Error(`“${r.name}”存在同队同名记录，请先在名单中区分姓名。`);
-    const id=r.id || same[0]?.id || playerId(r),old=merged.get(id);
-    merged.set(id,{...old,id,tournament:r.tournament,team:r.team,name:r.name,number:r.number?String(Number(r.number)):(old?.number||'')});
+export function parseCustomStarters(text,tournament,team) {
+  team=team.trim();if(!team)throw new Error('请填写双方球队名称。');
+  const records=[],numbers=new Set();
+  String(text).split(/\r\n?|\n/).forEach((line,index)=>{
+    line=line.trim();if(!line)return;
+    let number='',name=line;const numbered=line.match(/^(\d+)\s+(.+)$/);
+    if(numbered){
+      if(!/^\d{1,3}$/.test(numbered[1]))throw new Error(`第 ${index+1} 行：号码应为 0–999 的整数。`);
+      number=String(Number(numbered[1]));name=numbered[2].trim();
+      if(numbers.has(number))throw new Error(`第 ${index+1} 行：本队已有球员使用 ${number} 号。`);
+      numbers.add(number);
+    }else if(/^\d+$/.test(line))throw new Error(`第 ${index+1} 行：号码后需填写球员姓名。`);
+    records.push({tournament,team,name,number,sourceRow:index+1});
   });
-  return [...merged.values()];
+  if(!records.length)throw new Error(`请输入${team}的首发名单。`);
+  validateRecords(records);
+  return records;
 }
-// Upgrade old number-based relationships before any edit or import can change them.
+// Upgrade old number-based relationships before loading the official rosters.
 export function restoreState(saved) {
   if(!saved || ![1,2].includes(saved.version))return {records:[],match:blankMatch(),numberHistory:{}};
   const legacy=saved.version===1,source=saved.records||[];
@@ -131,6 +113,21 @@ export function restoreState(saved) {
   return {records,match,numberHistory};
 }
 export const rosterFor = (records,match,side) => records.filter(r=>r.tournament===match.tournament && r.team===match[side]);
+export function reconcileOfficialDraft(match,numberHistory,records) {
+  if(!records.some(r=>r.tournament===match.tournament)){
+    const tournament=records[0]?.tournament||'';
+    return {match:{...blankMatch(),tournament,title:tournament},numberHistory:mergeNumberHistories({},numberHistory,records)};
+  }
+  const next={...match,starters:{home:[],away:[]},numbers:{home:{},away:{}},events:[...match.events]},validPlayers={};
+  for(const side of ['home','away']){
+    const roster=rosterFor(records,match,side),ids=new Set(roster.map(playerId));validPlayers[side]=ids;
+    if(!match[side] || !ids.size){next[side]='';continue;}
+    next.starters[side]=match.starters[side].filter(id=>ids.has(id));
+    next.numbers[side]=Object.fromEntries(Object.entries(match.numbers[side]||{}).filter(([id])=>ids.has(id)));
+  }
+  next.events=match.events.filter(event=>validPlayers[event.side]?.has(event.playerId));
+  return {match:next,numberHistory:mergeNumberHistories({},numberHistory,records)};
+}
 export function parseBatch(text,type,match,records) {
   if(!TYPES.includes(type) && type!=='换人')throw new Error('请选择事件类型。');
   const rows=parseDelimited(text.includes(',')?text:text.replaceAll('，',',')), events=[];
