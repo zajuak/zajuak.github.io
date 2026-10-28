@@ -11,7 +11,8 @@ export const projects = [
   {
     title: '赛果图编辑器',
     subtitle: 'FOOTBALL MATCH EDITOR',
-    description: '',
+    description: '北大足协PKUFA',
+    image: 'pkufa.jpg',
     tags: ['在线工具', '足球赛果图'],
     href: 'https://zajuak.github.io/match-editor/',
     art: 'football',
