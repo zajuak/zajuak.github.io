@@ -1,8 +1,8 @@
 export const site = {
-  name: '赵俊凯',
-  englishName: 'Junkai Zhao',
-  title: 'JUN KAI · 数字手记',
-  description: '赵俊凯的数字手记。记录计算机科学、机器学习与计算机系统中的学习、思考和实践。',
+  name: 'zajuka',
+  englishName: 'zajuka',
+  title: 'zajuka · 数字手记',
+  description: 'zajuka 的数字手记。记录计算机科学、机器学习与计算机系统中的学习、思考和实践。',
   github: 'https://github.com/zajuak',
   source: 'https://github.com/zajuak/zajuak.github.io',
 };

@@ -1,6 +1,6 @@
-# JUN KAI · 数字手记
+# zajuka · 数字手记
 
-赵俊凯的个人网站，使用 Astro + Markdown 构建，面向 GitHub Pages 部署。
+zajuka 的个人网站，使用 Astro + Markdown 构建，面向 GitHub Pages 部署。
 
 设计采用浅蓝背景、深蓝强调色、紧凑的个人档案和分栏内容区。首页版式参考 [Arthals’ ink](https://arthals.ink/)，头像使用本站原创文字标记。内容结构参考 [Astro Theme Pure](https://github.com/cworld1/astro-theme-pure)，未复制其主题源代码或素材。
 
