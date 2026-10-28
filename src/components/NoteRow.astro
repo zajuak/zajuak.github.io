@@ -1,0 +1,12 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+import { formatDate, readingTime, url } from '../data/site';
+interface Props { note: CollectionEntry<'notes'>; index?: number; }
+const { note, index = 0 } = Astro.props;
+---
+<a class="note-row" href={url(`notes/${note.id}/`)} data-category={note.data.category} data-tags={note.data.tags.join(',')}>
+  <span class="note-index">{String(index + 1).padStart(2, '0')}</span>
+  <div class="note-content"><div class="note-meta"><span>{note.data.category}</span><span class="meta-dot">·</span><time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>{note.data.featured && <span class="featured-label">置顶</span>}</div><h3>{note.data.title}</h3><p>{note.data.description}</p><div class="note-bottom"><span>{readingTime(note.body)} 分钟阅读</span><span>{note.data.tags.map(t=>`# ${t}`).join('　')}</span></div></div>
+  <span class="note-arrow"><Icon name="arrow" size={22}/></span>
+</a>

@@ -1,0 +1,18 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import NoteRow from '../../components/NoteRow.astro';
+import Icon from '../../components/Icon.astro';
+import { url } from '../../data/site';
+const notes=(await getCollection('notes')).sort((a,b)=>b.data.order-a.data.order);
+const categories=[...new Set(notes.map(n=>n.data.category))];
+---
+<Base title="手记" active="notes"><div class="container page-container"><header class="page-heading"><p class="eyebrow">THE NOTEBOOK</p><h1>思考的痕迹<span class="heading-dot">.</span></h1><p>把零散的理解写成文字，让知识慢慢连成一片。</p></header><div class="notebook-toolbar"><div class="category-filters" role="group" aria-label="按分类筛选"><button data-filter="all" aria-pressed="true">全部 <span>{notes.length}</span></button>{categories.map(category=><button data-filter={category} aria-pressed="false">{category}</button>)}</div><button class="small-link notebook-search" data-open-search><Icon name="search" size={17}/> 搜索手记</button></div><p class="filter-summary" id="filter-summary" aria-live="polite">共 {notes.length} 篇手记</p><div class="notes-list notebook-list">{notes.map((note,index)=><NoteRow note={note} index={index}/>)}</div><div class="notebook-end"><span>✳</span><p>记录还在继续，下一页留给新的发现。</p><a href={url('rss.xml')} class="small-link"><Icon name="rss" size={15}/> 用 RSS 订阅更新</a></div></div></Base>
+<script>
+  const buttons=document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const rows=document.querySelectorAll<HTMLElement>('.note-row');
+  function filter(category:string){let count=0;rows.forEach(row=>{const show=category==='all'||row.dataset.category===category;row.hidden=!show;if(show)count++;});buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===category)));document.querySelector('#filter-summary')!.textContent=`共 ${count} 篇${category==='all'?'':`「${category}」`}手记`;}
+  const initial=new URLSearchParams(location.search).get('category');
+  if(initial&&[...buttons].some(b=>b.dataset.filter===initial))filter(initial);
+  buttons.forEach(button=>button.addEventListener('click',()=>{const category=button.dataset.filter!;filter(category);const next=new URL(location.href);if(category==='all')next.searchParams.delete('category');else next.searchParams.set('category',category);history.replaceState(null,'',next);}));
+</script>

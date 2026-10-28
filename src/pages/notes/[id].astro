@@ -1,0 +1,21 @@
+---
+import { getCollection,render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { formatDate,readingTime,url } from '../../data/site';
+export async function getStaticPaths(){const notes=await getCollection('notes');return notes.map(note=>({params:{id:note.id},props:{note}}));}
+const { note }=Astro.props;
+const { Content,headings }=await render(note);
+const allNotes=(await getCollection('notes')).sort((a,b)=>b.data.order-a.data.order);
+const next=allNotes.find(n=>n.id!==note.id);
+---
+<Base title={note.data.title} description={note.data.description} active="notes" article><div class="reading-progress" id="reading-progress"></div><div class="container article-container"><a class="back-link" href={url('notes/')}><span>←</span> 返回手记</a><header class="article-heading"><div class="article-category">{note.data.category}</div><h1>{note.data.title}</h1><p>{note.data.description}</p><div class="article-meta"><span>赵俊凯</span><span>·</span><time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time><span>·</span><span>{readingTime(note.body)} 分钟阅读</span></div></header><div class="article-grid"><article class="prose" id="article-body"><Content/></article><aside class="article-toc"><p class="eyebrow">ON THIS PAGE</p><h2>文章目录</h2><nav aria-label="文章目录">{headings.filter(h=>h.depth===2||h.depth===3).map(h=><a href={`#${h.slug}`} class:list={[h.depth===3&&'toc-nested']}>{h.text}</a>)}</nav><div class="toc-footnote">慢慢读，慢慢想。<span>✳</span></div></aside></div><div class="article-end"><div class="tags">{note.data.tags.map(tag=><span># {tag}</span>)}</div><p>文字会更新，理解也会继续生长。</p><a href={url('notes/')} class="small-link">回到全部手记 <Icon name="arrow" size={16}/></a></div>{next&&<a class="next-note" href={url(`notes/${next.id}/`)}><div><p class="eyebrow">KEEP EXPLORING</p><h2>{next.data.title}</h2></div><Icon name="arrow" size={25}/></a>}</div></Base>
+<script>
+  const progress=document.querySelector<HTMLElement>('#reading-progress')!;
+  const article=document.querySelector<HTMLElement>('#article-body')!;
+  function updateProgress(){const start=article.offsetTop;const total=article.offsetHeight-innerHeight;const value=total>0?Math.min(1,Math.max(0,(scrollY-start)/total)):1;progress.style.transform=`scaleX(${value})`;}
+  addEventListener('scroll',updateProgress,{passive:true});addEventListener('resize',updateProgress);updateProgress();
+  const links=document.querySelectorAll<HTMLAnchorElement>('.article-toc a');
+  const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){links.forEach(link=>link.classList.toggle('toc-active',decodeURIComponent(link.hash.slice(1))===entry.target.id));}}},{rootMargin:'-15% 0px -65% 0px'});
+  document.querySelectorAll('.prose h2,.prose h3').forEach(heading=>observer.observe(heading));
+</script>

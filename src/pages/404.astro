@@ -1,0 +1,6 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { url } from '../data/site';
+---
+<Base title="页面未找到"><div class="container not-found"><p class="eyebrow">A LITTLE OFF THE PATH / 404</p><span class="not-found-star">✳</span><h1>这里还没有长出内容。</h1><p>这条小路可能已改名，也可能正在等待新的想法。</p><a href={url()} class="button button-primary">回到花园 <Icon name="arrow" size={18}/></a></div></Base>

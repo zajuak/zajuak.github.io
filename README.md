@@ -1,0 +1,77 @@
+# JUN KAI · 数字手记
+
+赵俊凯的个人网站，使用 Astro + Markdown 构建，面向 GitHub Pages 部署。
+
+设计采用米白纸感、深墨绿、衬线标题和原创程序化 SVG 插画。内容结构参考 [Astro Theme Pure](https://github.com/cworld1/astro-theme-pure)，未复制其主题源代码或素材。
+
+## 本地运行
+
+需要 Node.js 22.23.4+，推荐 Node.js 24 LTS（`.nvmrc` 已配置）。
+
+```sh
+npm ci
+npm run dev
+```
+
+默认打开 http://localhost:4321 。
+
+```sh
+npm run check
+npm run build
+npm run preview
+```
+
+`dist/` 为完整静态产物，无服务器、数据库或密钥依赖。字体由 Google Fonts 提供，无法访问时回退到本机系统字体。
+
+## 修改内容
+
+- `src/data/site.ts`：个人资料、社交链接、项目。
+- `src/content/notes/*.md`：Markdown 手记。
+- `src/styles/global.css`：颜色、排版、响应式样式。
+- `src/components/GardenArt.astro`、`ProjectArt.astro`：原创 SVG 插画。
+
+新增手记示例：
+
+```yaml
+---
+title: '文章标题'
+description: '文章简介'
+date: 2026-10-28
+category: '计算机系统'
+tags: ['学习笔记']
+featured: false
+order: 4
+---
+```
+
+文件名就是文章 URL；`order` 越大排序越靠前。正文使用 Markdown。分类按钮、搜索索引、RSS 和 Sitemap 随构建自动更新。
+
+首批三篇手记是建站时新整理的导读文章，不是历史课程报告的转载；项目只引用已有公开仓库，不含私人简历、成绩或未公开研究材料。
+
+## GitHub Pages
+
+目标仓库：`zajuak/zajuak.github.io`；目标地址：`https://zajuak.github.io/`。
+
+在仓库 Settings → Pages → Build and deployment 中选择 **GitHub Actions**，推送到 `main` 后 `.github/workflows/deploy.yml` 会执行依赖安装、类型检查、静态构建与部署。
+
+如果改用项目仓库，例如 `personal-site`，构建时设置：
+
+```sh
+SITE_URL=https://zajuak.github.io BASE_PATH=/personal-site npm run build
+```
+
+同时在 Actions 构建步骤中添加对应环境变量，并调整 `public/robots.txt` 中的 Sitemap 地址。若使用自定义域名，更新 `SITE_URL`、robots.txt 和 Pages 的域名设置。
+
+## 功能
+
+- 首页、手记列表、文章、项目、关于、404。
+- 文章分类、全文搜索（`⌘ K` / `Ctrl K` / `/`）、阅读时间和文章目录。
+- 可持久化的深浅主题、移动导航、阅读进度。
+- RSS、Sitemap、Canonical、Open Graph、跳转正文、键盘访问和减少动态效果支持。
+
+## 设计来源
+
+- 信息结构灵感：[Astro Theme Pure](https://github.com/cworld1/astro-theme-pure)。
+- 构建：[Astro](https://astro.build/)。
+- 字体：DM Sans 与 Noto Serif SC（Google Fonts，SIL Open Font License）。
+- SVG 视觉、页面与样式为本项目独立编写。

@@ -1,0 +1,44 @@
+---
+const project = (lat: number, lon: number) => {
+  const x = 87 * Math.cos(lat) * Math.cos(lon);
+  const y = 87 * Math.sin(lat);
+  const z = 87 * Math.cos(lat) * Math.sin(lon);
+  return [245 + x * .92 + z * .38, 145 + y * .9 - z * .24];
+};
+const ring = (fixed: number, latitude: boolean) => Array.from({ length: 81 }, (_, n) => {
+  const a = n / 80 * Math.PI * 2;
+  const p = latitude ? project(fixed, a) : project(a, fixed);
+  return `${n ? 'L' : 'M'}${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+}).join(' ');
+---
+<div class="garden-art">
+  <svg viewBox="0 0 460 365" role="img" aria-labelledby="garden-title">
+    <title id="garden-title">原创几何插画：线框球体与阶梯，象征不断生长的想法</title>
+    <defs>
+      <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="currentColor" opacity=".14"/></pattern>
+      <linearGradient id="sphere-fill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c5d3b2" stop-opacity=".7"/><stop offset="1" stop-color="#95ad89" stop-opacity=".12"/></linearGradient>
+    </defs>
+    <rect width="460" height="365" fill="url(#dots)"/>
+    <g stroke="currentColor" stroke-width=".7" opacity=".14"><path d="m40 267 202 80 185-92M63 251l204 81m-178-96 204 80m-179-97 205 82m-179-97 205 82M69 279l185-92M101 292l185-92m-153 105 185-92m-153 105 185-92m-153 105 185-92"/></g>
+    <g stroke="currentColor" stroke-width=".85" stroke-linejoin="round">
+      <path d="m117 256 126-60 113 45-126 63Z" fill="var(--art-step-top)"/>
+      <path d="m117 256 113 48v23l-113-48Z" fill="var(--art-step-left)"/>
+      <path d="m230 304 126-63v23l-126 63Z" fill="var(--art-step-right)"/>
+      <path d="m153 226 91-44 80 32-90 45Z" fill="var(--art-step-top)"/>
+      <path d="m153 226 81 33v24l-81-34Z" fill="var(--art-step-left)"/>
+      <path d="m234 259 90-45v24l-90 45Z" fill="var(--art-step-right)"/>
+      <path d="m190 203 55-27 49 20-55 27Z" fill="var(--art-step-top)"/>
+      <path d="m190 203 49 20v23l-49-20Z" fill="var(--art-step-left)"/>
+      <path d="m239 223 55-27v23l-55 27Z" fill="var(--art-step-right)"/>
+    </g>
+    <ellipse cx="245" cy="145" rx="87" ry="81" fill="url(#sphere-fill)"/>
+    <g fill="none" stroke="currentColor" stroke-width=".7" opacity=".7">
+      {Array.from({ length: 9 }, (_, i) => <path d={ring((i - 4) * Math.PI / 10, true)}/>)}
+      {Array.from({ length: 12 }, (_, i) => <path d={ring(i * Math.PI / 12, false)}/>)}
+    </g>
+    <g stroke="currentColor" fill="none" opacity=".35" stroke-width=".8"><path d="M245 35v-7m0 14v-7m-4 0h8M350 146h15m-7.5-7.5v15M90 120h12m-6-6v12M80 321h25M92.5 309v25"/><circle cx="245" cy="145" r="104" stroke-dasharray="2 7"/><path d="M139 145H97m148-106V19m91 176 42 23" stroke-dasharray="3 4"/></g>
+    <path d="m115 83 15-7 15 6-15 8Z" fill="#b6926b"/><path d="m115 83 15 7v16l-15-7Z" fill="#c9ad86"/><path d="m130 90 15-8v16l-15 8Z" fill="#9e7f5b"/>
+    <g fill="currentColor" opacity=".65" font-family="monospace" font-size="8" letter-spacing="1.3"><text x="30" y="30">FIELD NOTES — 001</text><text x="320" y="330">x → ∞</text><text x="367" y="225">IDEA</text></g>
+  </svg>
+  <div class="art-caption"><span>FIG. 01</span><span>Ideas, taking shape.</span><span>↗</span></div>
+</div>

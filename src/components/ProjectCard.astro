@@ -1,0 +1,11 @@
+---
+import Icon from './Icon.astro';
+import ProjectArt from './ProjectArt.astro';
+import type { projects } from '../data/site';
+interface Props { project: typeof projects[number]; }
+const { project } = Astro.props;
+---
+<a class="project-card" href={project.href} target="_blank" rel="noopener noreferrer">
+  <div class="project-image"><ProjectArt type={project.art}/><span class="project-number">EXPERIMENT / {project.number}</span><span class="project-open"><Icon name="external" size={17}/></span></div>
+  <div class="project-copy"><p class="eyebrow">{project.subtitle}</p><h3>{project.title}<Icon name="arrow"/></h3><p>{project.description}</p><div class="tags">{project.tags.map(tag=><span>{tag}</span>)}</div></div>
+</a>

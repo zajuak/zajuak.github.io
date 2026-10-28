@@ -1,0 +1,71 @@
+---
+import { getCollection } from 'astro:content';
+import Icon from '../components/Icon.astro';
+import { site, url } from '../data/site';
+import '../styles/global.css';
+interface Props { title?: string; description?: string; active?: string; article?: boolean; }
+const { title, description = site.description, active = '', article = false } = Astro.props;
+const pageTitle = title ? `${title} · ${site.title}` : `${site.name} · 数字手记`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const notes = (await getCollection('notes')).sort((a,b)=>b.data.order-a.data.order);
+const searchItems = notes.map(note=>({ title:note.data.title, description:note.data.description, category:note.data.category, text:`${note.data.tags.join(' ')} ${note.body}`, href:url(`notes/${note.id}/`) }));
+const nav = [{label:'首页',key:'home',href:''},{label:'手记',key:'notes',href:'notes/'},{label:'项目',key:'projects',href:'projects/'},{label:'关于',key:'about',href:'about/'}];
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content={description}/><meta name="generator" content={Astro.generator}/>
+    <meta name="color-scheme" content="light dark"/><meta name="theme-color" content="#f7f7f2"/>
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')}/><link rel="canonical" href={canonical}/>
+    <link rel="alternate" type="application/rss+xml" title={`${site.name}的手记`} href={url('rss.xml')}/>
+    <meta property="og:title" content={pageTitle}/><meta property="og:description" content={description}/><meta property="og:type" content={article?'article':'website'}/><meta property="og:url" content={canonical}/><meta property="og:image" content={new URL(url('social.svg'),Astro.site)}/><meta name="twitter:card" content="summary"/>
+    <title>{pageTitle}</title>
+    <script is:inline>
+      try { const stored = localStorage.getItem('junkai-theme'); document.documentElement.dataset.theme = stored === 'dark' ? 'dark' : 'light'; } catch { document.documentElement.dataset.theme = 'light'; }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳转到正文</a>
+    <header class="site-header"><div class="header-inner">
+      <a class="brand" href={url()} aria-label="JUN KAI，返回首页"><span class="brand-mark">j<span>k</span><i></i></span><span class="brand-word">JUN KAI<span>数字手记</span></span></a>
+      <nav aria-label="主导航" class="desktop-nav">{nav.map(item=><a href={url(item.href)} class:list={[active===item.key&&'active']} aria-current={active===item.key?'page':undefined}>{item.label}</a>)}</nav>
+      <div class="header-actions"><button class="search-trigger" data-open-search aria-label="搜索文章"><Icon name="search" size={18}/><span>搜索</span><kbd>⌘ K</kbd></button><span class="action-divider"></span><button id="theme-toggle" class="icon-button" aria-label="切换深色模式"><span class="theme-moon"><Icon name="moon" size={19}/></span><span class="theme-sun"><Icon name="sun" size={19}/></span></button><button id="menu-toggle" class="icon-button mobile-only" aria-label="打开导航" aria-controls="mobile-nav" aria-expanded="false"><Icon name="menu"/></button></div>
+    </div><nav id="mobile-nav" aria-label="移动导航" hidden>{nav.map(item=><a href={url(item.href)} aria-current={active===item.key?'page':undefined}>{item.label}<Icon name="arrow" size={16}/></a>)}</nav></header>
+    <main id="main"><slot/></main>
+    <footer class="site-footer container"><div class="footer-top"><a class="footer-signature" href={url()}>Junkai<span> / </span>赵俊凯</a><p>认真生活，保持好奇。</p><div class="footer-links"><a href={site.github} target="_blank" rel="noopener noreferrer" aria-label="访问 GitHub"><Icon name="github" size={19}/></a><a href={url('rss.xml')} aria-label="订阅 RSS"><Icon name="rss" size={19}/></a><a href="#top" id="back-top" aria-label="返回顶部">↑</a></div></div><div class="footer-bottom"><span>© 2026 Junkai Zhao</span><span>Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a> <span class="footer-dot">·</span> Grown with curiosity <span class="little-star">✳</span></span><a href={site.source} target="_blank" rel="noopener noreferrer">网站源码 <span aria-hidden="true">↗</span></a></div></footer>
+    <dialog id="search-dialog" aria-labelledby="search-heading"><div class="search-dialog-top"><Icon name="search"/><label class="sr-only" for="search-input" id="search-heading">搜索手记</label><input type="search" id="search-input" placeholder="搜索标题、标签或正文…" autocomplete="off"/><button id="close-search" class="search-escape" aria-label="关闭搜索">ESC</button></div><div class="search-status" id="search-status" aria-live="polite">从一个关键词开始探索</div><div id="search-results"></div><div class="search-dialog-footer"><span>搜索数字手记</span><span><kbd>esc</kbd> 关闭</span></div></dialog>
+    <script id="search-data" type="application/json" set:html={JSON.stringify(searchItems).replaceAll('<','\\u003c')}/>
+    <script>
+      const themeButton = document.querySelector<HTMLButtonElement>('#theme-toggle')!;
+      function updateThemeLabel() { themeButton.setAttribute('aria-label', document.documentElement.dataset.theme === 'dark' ? '切换浅色模式' : '切换深色模式'); }
+      updateThemeLabel();
+      themeButton.addEventListener('click',()=>{ const theme = document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=theme; try{localStorage.setItem('junkai-theme',theme);}catch{} updateThemeLabel(); });
+      const menu = document.querySelector<HTMLElement>('#mobile-nav')!;
+      const menuToggle = document.querySelector<HTMLButtonElement>('#menu-toggle')!;
+      menuToggle.addEventListener('click',()=>{menu.hidden=!menu.hidden;menuToggle.setAttribute('aria-expanded',String(!menu.hidden));menuToggle.setAttribute('aria-label',menu.hidden?'打开导航':'关闭导航');});
+      const dialog=document.querySelector<HTMLDialogElement>('#search-dialog')!;
+      const input=document.querySelector<HTMLInputElement>('#search-input')!;
+      const results=document.querySelector<HTMLElement>('#search-results')!;
+      const status=document.querySelector<HTMLElement>('#search-status')!;
+      type SearchItem={title:string;description:string;category:string;text:string;href:string};
+      const data:SearchItem[]=JSON.parse(document.querySelector('#search-data')!.textContent!);
+      function search(){
+        const query=input.value.trim().toLocaleLowerCase();
+        const matches=data.filter(item=>!query||`${item.title} ${item.description} ${item.category} ${item.text}`.toLocaleLowerCase().includes(query));
+        results.replaceChildren();
+        status.textContent=query?`找到 ${matches.length} 篇相关手记`:'全部手记';
+        for(const item of matches){ const link=document.createElement('a');link.href=item.href;link.className='search-result';const cat=document.createElement('span');cat.textContent=item.category;const title=document.createElement('strong');title.textContent=item.title;const desc=document.createElement('p');desc.textContent=item.description;link.append(cat,title,desc);results.append(link);}
+        if(!matches.length){const empty=document.createElement('p');empty.className='search-empty';empty.textContent='还没有相关记录，试试「编译」「学习」或「网站」。';results.append(empty);}
+      }
+      function openSearch(){dialog.showModal();document.body.classList.add('dialog-open');search();input.focus();}
+      document.querySelectorAll('[data-open-search]').forEach(button=>button.addEventListener('click',openSearch));
+      document.querySelector('#close-search')!.addEventListener('click',()=>dialog.close());
+      dialog.addEventListener('close',()=>document.body.classList.remove('dialog-open'));
+      dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});
+      input.addEventListener('input',search);
+      document.addEventListener('keydown',event=>{const target=event.target as HTMLElement;const editing=['INPUT','TEXTAREA','SELECT'].includes(target.tagName)||target.isContentEditable;if((event.metaKey||event.ctrlKey)&&event.key==='k'||event.key==='/'&&!editing){event.preventDefault();if(!dialog.open)openSearch();}});
+      document.querySelector('#back-top')!.addEventListener('click',event=>{event.preventDefault();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});});
+    </script>
+  </body>
+</html>
