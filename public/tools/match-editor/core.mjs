@@ -2,6 +2,15 @@
 export const TYPES = ['进球', '点球', '乌龙', '助攻', '黄牌', '红牌', '两黄', '射失点球', '换下', '换上'];
 export const ICONS = {进球:'G',点球:'PG',乌龙:'icon_w',助攻:'AS',黄牌:'YC',红牌:'RC',两黄:'YYR',射失点球:'PM',换下:'SO',换上:'SI'};
 export const CUSTOM_TOURNAMENT = '__custom__';
+const tournamentNames={'2026新生杯':'2026年新生杯男子足球赛','2026-27五人制女足北大杯':'2026-27北大杯女子足球赛','2026-27女足北大杯':'2026-27北大杯女子足球赛'};
+const teamNames={'外国语学院':'外院','信息管理学院—历史学系联队':'信历','经济学院':'经济','生命科学学院':'生科'};
+const mapped=(map,value)=>Object.hasOwn(map,value)?map[value]:value;
+export function normalizeRosterRecord(player){
+  const tournament=mapped(tournamentNames,player.tournament),men=tournament==='2026年新生杯男子足球赛';
+  const team=men?mapped(teamNames,player.team):player.team;
+  return {...player,tournament,team,name:men && team==='数学' && player.name==='申宇颢'?'申宇灏':player.name};
+}
+
 export const escapeXML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export const key = (...parts) => JSON.stringify(parts);
 export const blankMatch = () => ({id:crypto.randomUUID(),tournament:'',home:'',away:'',title:'',starters:{home:[],away:[]},goalkeepers:{home:'',away:''},numbers:{home:{},away:{}},events:[],showLineups:true});
@@ -109,23 +118,25 @@ export function parseCustomStarters(text,tournament,team) {
 // Upgrade old number-based relationships before loading the official rosters.
 export function restoreState(saved) {
   if(!saved || ![1,2].includes(saved.version))return {records:[],match:blankMatch(),numberHistory:{}};
-  const aliases={'2026新生杯':'2026年新生杯男子足球赛','2026-27五人制女足北大杯':'2026-27北大杯女子足球赛','2026-27女足北大杯':'2026-27北大杯女子足球赛'};
-  const renamed=name=>Object.hasOwn(aliases,name)?aliases[name]:name;
-  if(saved.records?.some(p=>renamed(p.tournament)!==p.tournament) || renamed(saved.match?.tournament)!==saved.match?.tournament){
+  const correctedPlayer=p=>{const next=normalizeRosterRecord(p);return p.tournament!==next.tournament || p.team!==next.team || p.name!==next.name;};
+  const matchNeedsCorrection=saved.match && ['home','away'].some(side=>correctedPlayer({tournament:saved.match.tournament,team:saved.match[side],name:''}));
+  if(saved.records?.some(correctedPlayer) || matchNeedsCorrection){
     saved=structuredClone(saved);
     const ids=new Map();
-    for(const player of saved.records||[])if(renamed(player.tournament)!==player.tournament){
-      const oldId=playerId(player);player.tournament=renamed(player.tournament);player.id=key(player.tournament,player.team,player.name);ids.set(oldId,player.id);
+    for(const player of saved.records||[])if(correctedPlayer(player)){
+      const oldId=playerId(player);Object.assign(player,normalizeRosterRecord(player));player.id=key(player.tournament,player.team,player.name);ids.set(oldId,player.id);
     }
     const rename=id=>ids.get(id)||id;
     saved.numberHistory=Object.fromEntries(Object.entries(saved.numberHistory||{}).map(([id,entries])=>[rename(id),entries]));
-    if(renamed(saved.match?.tournament)!==saved.match?.tournament){
-      const match=saved.match,oldName=match.tournament;match.tournament=renamed(oldName);if(match.title===oldName)match.title=match.tournament;
+    if(saved.match){
+      const match=saved.match,oldName=match.tournament;
       for(const side of ['home','away']){
+        const corrected=normalizeRosterRecord({tournament:oldName,team:match[side],name:''});match[side]=corrected.team;
         if(match.starters?.[side])match.starters[side]=match.starters[side].map(rename);
         if(match.goalkeepers?.[side])match.goalkeepers[side]=rename(match.goalkeepers[side]);
         if(match.numbers?.[side])match.numbers[side]=Object.fromEntries(Object.entries(match.numbers[side]).map(([id,number])=>[rename(id),number]));
       }
+      match.tournament=mapped(tournamentNames,oldName);if(match.title===oldName)match.title=match.tournament;
       match.events=(match.events||[]).map(event=>({...event,playerId:rename(event.playerId)}));
     }
   }

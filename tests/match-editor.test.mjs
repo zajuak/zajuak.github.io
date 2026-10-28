@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseDelimited,compareTimes,parseBatch,calculateScore,renderPoster,blankMatch,playerLabel,playerId,matchNumber,setMatchNumber,previousNumber,rememberNumber,restoreState,missingNumbers,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,CUSTOM_TOURNAMENT,isGoalkeeper,setGoalkeeper,missingGoalkeepers} from '../public/tools/match-editor/core.mjs';
+import {parseDelimited,compareTimes,parseBatch,calculateScore,renderPoster,blankMatch,playerLabel,playerId,matchNumber,setMatchNumber,previousNumber,rememberNumber,restoreState,missingNumbers,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,CUSTOM_TOURNAMENT,isGoalkeeper,setGoalkeeper,missingGoalkeepers,normalizeRosterRecord} from '../public/tools/match-editor/core.mjs';
 import {registrationTableToRecords,loadOfficialRosters,loadOfficialData} from '../public/tools/match-editor/importers.mjs';
 import {readFile} from 'node:fs/promises';
 const records=[
@@ -210,8 +210,8 @@ test('published rosters load both tournaments without exposing DOCX fields',asyn
     return new Response(body,{headers:{'content-type':'application/json'}});
   });
   const loaded=await loadOfficialRosters('https://roster.test/data/manifest.json');
-  assert.equal(loaded.length,621);
-  for(const [name,teams,players] of [['2026年新生杯男子足球赛',18,486],['2026-27北大杯女子足球赛',8,135]]){
+  assert.equal(loaded.length,626);
+  for(const [name,teams,players] of [['2026年新生杯男子足球赛',18,491],['2026-27北大杯女子足球赛',8,135]]){
     const roster=loaded.filter(r=>r.tournament===name);assert.equal(roster.length,players);assert.equal(new Set(roster.map(r=>r.team)).size,teams);
   }
   assert.ok(loaded.every(r=>r.number===''));
@@ -254,4 +254,31 @@ for(const [oldName,newName] of [['2026新生杯','2026年新生杯男子足球�
   assert.equal(previousNumber(reconciled.numberHistory,nextId,match.id),'9');assert.equal(calculateScore(reconciled.match.events).home,1);
   assert.equal(saved.match.tournament,oldName);
   saved.match.title='女足小组赛第一轮';assert.equal(restoreState(saved).match.title,'女足小组赛第一轮');
+});
+
+
+test('official team and player corrections retain draft relationships and stay within the men tournament',()=>{
+  const tournament='2026年新生杯男子足球赛';
+  for(const [team,name,nextTeam,nextName] of [['外国语学院','张三','外院','张三'],['信息管理学院—历史学系联队','张三','信历','张三'],['经济学院','张三','经济','张三'],['生命科学学院','张三','生科','张三'],['数学','申宇颢','数学','申宇灏']]){
+    const roster=[{tournament,team,name,number:''}],id=playerId(roster[0]),official=roster.map(normalizeRosterRecord),nextId=playerId(official[0]);
+    const match={...blankMatch(),tournament,home:team,away:'城环',title:'小组赛'};
+    match.starters.home=[id];setGoalkeeper(match,roster,'home',id);setMatchNumber(match,roster,'home',id,'7');
+    match.events=createPlayerEvents('进球','12','home',[id],match,roster);
+    const saved={version:2,records:roster,match,numberHistory:rememberNumber({},id,'last-match','9')};
+    const restored=restoreState(saved),next=reconcileOfficialDraft(restored.match,restored.numberHistory,official);
+    assert.equal(next.match.home,nextTeam);assert.equal(restored.records[0].name,nextName);
+    assert.deepEqual(next.match.starters.home,[nextId]);assert.equal(next.match.goalkeepers.home,nextId);
+    assert.equal(next.match.events[0].playerId,nextId);assert.equal(matchNumber(next.match,'home',nextId),'7');assert.equal(previousNumber(next.numberHistory,nextId,match.id),'9');
+    assert.equal(saved.records[0].name,name);assert.equal(next.match.title,'小组赛');
+    assert.equal(normalizeRosterRecord({...roster[0],tournament:CUSTOM_TOURNAMENT}).team,team);
+  }
+});
+
+test('updated published men roster includes Chenghuan additions and requested spelling',async()=>{
+  const roster=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-1.json',import.meta.url),'utf8'));
+  const names=roster.filter(p=>p.team==='城环').map(p=>p.name);assert.equal(names.length,28);
+  for(const name of ['西绕彭措','阎帅彤','高晟越','高杰杨','黄恩来'])assert.ok(names.includes(name));
+  assert.ok(roster.some(p=>p.team==='数学' && p.name==='申宇灏'));assert.ok(!roster.some(p=>p.name==='申宇颢'));
+  for(const name of ['外院','信历','经济','生科'])assert.ok(roster.some(p=>p.team===name));
+  assert.ok(!roster.some(p=>['外国语学院','信息管理学院—历史学系联队','经济学院','生命科学学院'].includes(p.team)));
 });

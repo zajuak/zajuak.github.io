@@ -8,6 +8,8 @@ from zipfile import ZipFile
 
 NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 WORD = NS["w"]
+MEN = "2026年新生杯男子足球赛"
+TEAM_NAMES = {"外国语学院": "外院", "信息管理学院—历史学系联队": "信历", "经济学院": "经济", "生命科学学院": "生科"}
 
 
 def text(element):
@@ -62,6 +64,9 @@ def main():
         records, teams = [], set()
         for file in tournament["files"]:
             team, players = extract(args.source.parent / tournament["directory"] / file)
+            if tournament["name"] == MEN:
+                team = TEAM_NAMES.get(team, team)
+                players = [{"team": team, "name": "申宇灏" if team == "数学" and p["name"] == "申宇颢" else p["name"]} for p in players]
             if team in teams:
                 raise ValueError(f"重复球队：{team}")
             teams.add(team)

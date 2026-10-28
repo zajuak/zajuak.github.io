@@ -1,4 +1,4 @@
-import {validateRecords} from './core.mjs?v=20261028-tournament-names';
+import {validateRecords,normalizeRosterRecord} from './core.mjs?v=20261028-rosters';
 const WORD='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 function wordDocument(xml) {
@@ -19,7 +19,7 @@ export function registrationTableToRecords(rows,{tournament,team}) {
   if(!columns)throw new Error('名单表格应为左右双栏报名表，或含“序号、球员姓名”的六列表格。');
   const records=rows.slice(1).flatMap((row,index)=>columns.flatMap(column=>{
     const name=String(row[column]??'').trim();
-    return name?[{tournament,team,name,number:'',sourceRow:index+2}]:[];
+    return name?[normalizeRosterRecord({tournament,team,name,number:'',sourceRow:index+2})]:[];
   }));
   if(!records.length)throw new Error('名单表格中没有球员。');
   validateRecords(records);
@@ -32,7 +32,7 @@ async function loadTournament(tournament,manifestUrl) {
     if(!response.ok)throw new Error(`${tournament.name} 名单加载失败（${response.status}）。`);
     const data=await response.json();
     if(!Array.isArray(data) || !data.length)throw new Error(`${tournament.name} 名单为空或格式不正确。`);
-    const records=data.map(r=>({tournament:tournament.name,team:r.team,name:r.name,number:''}));
+    const records=data.map(r=>normalizeRosterRecord({tournament:tournament.name,team:r.team,name:r.name,number:''}));
     validateRecords(records);return records;
   }
   const records=[],teams=new Set();
