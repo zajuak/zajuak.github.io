@@ -4,7 +4,6 @@ import Icon from '../components/Icon.astro';
 import Introduction from '../components/Introduction.astro';
 import Education from '../components/Education.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import RepositoryList from '../components/RepositoryList.astro';
 import { projects, site, url } from '../data/site';
 ---
 <Base active="home">
@@ -12,14 +11,14 @@ import { projects, site, url } from '../data/site';
     <section class="profile-hero" aria-labelledby="hero-title">
       <div class="profile-avatar" aria-hidden="true"><span>z</span></div>
       <h1 id="hero-title">{site.name}</h1>
-      <div class="profile-socials"><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={17}/> GitHub <Icon name="external" size={13}/></a><a href={url('rss.xml')}><Icon name="rss" size={16}/> RSS</a><a href={url('tools/match-editor/')}>赛果图编辑器 <Icon name="arrow" size={14}/></a></div>
+      <div class="profile-socials"><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={17}/> GitHub <Icon name="external" size={13}/></a></div>
     </section>
     <div class="profile-content">
       <Introduction/>
       <Education/>
       <section class="profile-section home-projects" aria-labelledby="projects-title">
         <header class="section-rail"><h2 id="projects-title">项目</h2><p>PROJECTS</p></header>
-        <div class="section-body"><div class="home-project-list">{projects.map(project=><ProjectCard project={project}/>)}</div><h3 class="repository-section-title">GitHub 仓库</h3><RepositoryList/><div class="section-tail"><a class="small-link" href={url('projects/')}>全部项目 <Icon name="arrow" size={16}/></a></div></div>
+        <div class="section-body"><div class="home-project-list">{projects.map(project=><ProjectCard project={project}/>)}</div><div class="section-tail"><a class="small-link" href={url('projects/')}>全部项目 <Icon name="arrow" size={16}/></a></div></div>
       </section>
       <section class="profile-section home-friends" aria-labelledby="friends-title">
         <header class="section-rail"><h2 id="friends-title">友链</h2><p>CONNECTIONS</p></header>
