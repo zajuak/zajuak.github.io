@@ -109,6 +109,25 @@ export function parseCustomStarters(text,tournament,team) {
 // Upgrade old number-based relationships before loading the official rosters.
 export function restoreState(saved) {
   if(!saved || ![1,2].includes(saved.version))return {records:[],match:blankMatch(),numberHistory:{}};
+  const oldName='2026-27五人制女足北大杯',newName='2026-27女足北大杯';
+  if(saved.records?.some(p=>p.tournament===oldName) || saved.match?.tournament===oldName){
+    saved=structuredClone(saved);
+    const ids=new Map();
+    for(const player of saved.records||[])if(player.tournament===oldName){
+      const oldId=playerId(player);player.tournament=newName;player.id=key(newName,player.team,player.name);ids.set(oldId,player.id);
+    }
+    const rename=id=>ids.get(id)||id;
+    saved.numberHistory=Object.fromEntries(Object.entries(saved.numberHistory||{}).map(([id,entries])=>[rename(id),entries]));
+    if(saved.match?.tournament===oldName){
+      const match=saved.match;match.tournament=newName;if(match.title===oldName)match.title=newName;
+      for(const side of ['home','away']){
+        if(match.starters?.[side])match.starters[side]=match.starters[side].map(rename);
+        if(match.goalkeepers?.[side])match.goalkeepers[side]=rename(match.goalkeepers[side]);
+        if(match.numbers?.[side])match.numbers[side]=Object.fromEntries(Object.entries(match.numbers[side]).map(([id,number])=>[rename(id),number]));
+      }
+      match.events=(match.events||[]).map(event=>({...event,playerId:rename(event.playerId)}));
+    }
+  }
   const legacy=saved.version===1,source=saved.records||[];
   const counts=new Map();for(const p of source){const id=key(p.tournament,p.team,p.name);counts.set(id,(counts.get(id)||0)+1);}
   const records=source.map(r=>({...r,id:r.id || (counts.get(key(r.tournament,r.team,r.name))>1?key(r.tournament,r.team,r.name,r.number):playerId(r))}));

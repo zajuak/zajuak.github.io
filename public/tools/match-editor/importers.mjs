@@ -1,4 +1,4 @@
-import {validateRecords} from './core.mjs?v=20261028-women';
+import {validateRecords} from './core.mjs?v=20261028-women-name';
 const WORD='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 function wordDocument(xml) {

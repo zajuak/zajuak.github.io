@@ -211,12 +211,12 @@ test('published rosters load both tournaments without exposing DOCX fields',asyn
   });
   const loaded=await loadOfficialRosters('https://roster.test/data/manifest.json');
   assert.equal(loaded.length,621);
-  for(const [name,teams,players] of [['2026新生杯',18,486],['2026-27五人制女足北大杯',8,135]]){
+  for(const [name,teams,players] of [['2026新生杯',18,486],['2026-27女足北大杯',8,135]]){
     const roster=loaded.filter(r=>r.tournament===name);assert.equal(roster.length,players);assert.equal(new Set(roster.map(r=>r.team)).size,teams);
   }
   assert.ok(loaded.every(r=>r.number===''));
   const official=await loadOfficialData('https://roster.test/data/manifest.json');
-  assert.deepEqual(official.tournaments,[{name:'2026新生杯',lineups:true},{name:'2026-27五人制女足北大杯',lineups:false}]);
+  assert.deepEqual(official.tournaments,[{name:'2026新生杯',lineups:true},{name:'2026-27女足北大杯',lineups:false}]);
   const published=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-1.json',import.meta.url),'utf8'));
   const women=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-2.json',import.meta.url),'utf8'));
   assert.ok([...published,...women].every(r=>Object.keys(r).sort().join(',')==='name,team'));
@@ -237,4 +237,20 @@ test('competition without lineups exports events without starting goalkeepers or
   match.events=createPlayerEvents('进球','12','home',[li],match,records);
   const svg=renderPoster(match,records);assert.ok(!svg.includes('首发阵容'));assert.ok(svg.includes('7 李四'));assert.equal(calculateScore(match.events).home,1);
   setMatchNumber(match,records,'home',li,'');assert.deepEqual(missingNumbers(match,records),['红队 · 李四']);
+});
+
+test('women tournament rename preserves draft events, numbers, history and custom titles',()=>{
+  const oldName='2026-27五人制女足北大杯',newName='2026-27女足北大杯';
+  const roster=[{tournament:oldName,team:'元培',name:'张三',number:''},{tournament:oldName,team:'医学',name:'李四',number:''}];
+  const id=playerId(roster[0]),nextId=playerId({...roster[0],tournament:newName});
+  const match={...blankMatch(),tournament:oldName,title:oldName,home:'元培',away:'医学',lineupsEnabled:false,showLineups:false};
+  setMatchNumber(match,roster,'home',id,'7');match.events=createPlayerEvents('进球','12','home',[id],match,roster);
+  const saved={version:2,records:roster,match,numberHistory:rememberNumber({},id,'previous','9')};
+  const restored=restoreState(saved),official=roster.map(p=>({...p,tournament:newName}));
+  const reconciled=reconcileOfficialDraft(restored.match,restored.numberHistory,official);
+  assert.equal(reconciled.match.tournament,newName);assert.equal(reconciled.match.title,newName);
+  assert.equal(reconciled.match.events[0].playerId,nextId);assert.equal(matchNumber(reconciled.match,'home',nextId),'7');
+  assert.equal(previousNumber(reconciled.numberHistory,nextId,match.id),'9');assert.equal(calculateScore(reconciled.match.events).home,1);
+  assert.equal(saved.match.tournament,oldName);
+  saved.match.title='女足小组赛第一轮';assert.equal(restoreState(saved).match.title,'女足小组赛第一轮');
 });
