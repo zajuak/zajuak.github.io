@@ -183,7 +183,7 @@ export const playerLabel = (records,match,event) => {
   const p=rosterFor(records,match,event.side).find(p=>playerId(p)===event.playerId);
   if(!p)return '球员（名单缺失）';
   const keeper=isGoalkeeper(match,event.side,p),number=matchNumber(match,event.side,p);
-  return `${number||(keeper?'GK':'待填号码')} ${p.name}`;
+  return `${number||(keeper?'GK':'待填号码')} ${p.name}${keeper?'(GK)':''}`;
 };
 
 // The same self-contained SVG drives the live poster and PNG/SVG downloads.
@@ -231,7 +231,10 @@ export function renderPoster(match,records,icons={}) {
   if(match.showLineups) {
     body.push(`<line x1="24" y1="${y}" x2="776" y2="${y}" stroke="#e1e3e8"/>`,text(400,y+35,'首发阵容',20,'#323745','middle',600));y+=68;
     const selected={};
-    for(const side of ['home','away'])selected[side]=match.starters[side].map(id=>rosterFor(records,match,side).find(p=>playerId(p)===id)).filter(Boolean);
+    for(const side of ['home','away']){
+      const players=match.starters[side].map(id=>rosterFor(records,match,side).find(p=>playerId(p)===id)).filter(Boolean);
+      selected[side]=[...players.filter(p=>isGoalkeeper(match,side,p)),...players.filter(p=>!isGoalkeeper(match,side,p))];
+    }
     let used=0;
     for(const [i,side] of ['home','away'].entries()) {
       const x=i?430:40;let ly=y;
@@ -240,7 +243,7 @@ export function renderPoster(match,records,icons={}) {
       for(const p of selected[side]) {
         const keeper=isGoalkeeper(match,side,p);
         body.push(`<rect x="${x}" y="${ly-20}" width="36" height="28" rx="5" fill="${keeper?'#e5f2e9':'#eeecf8'}"/>`,text(x+18,ly,matchNumber(match,side,p)||(keeper?'GK':'—'),16,keeper?'#277744':'#6257a8','middle',600));
-        const lines=wrap(p.name,14);lines.forEach((line,j)=>body.push(text(x+50,ly+j*24,line,19)));ly+=Math.max(36,lines.length*24+8);
+        const lines=wrap(p.name+(keeper?'(GK)':''),14);lines.forEach((line,j)=>body.push(text(x+50,ly+j*24,line,19)));ly+=Math.max(36,lines.length*24+8);
       }
       used=Math.max(used,ly-y);
     }

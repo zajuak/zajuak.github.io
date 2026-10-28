@@ -189,7 +189,7 @@ $('preview-batch').addEventListener('click',()=>{
 $('confirm-batch').addEventListener('click',()=>{if(!pendingEvents)return;match.events.push(...pendingEvents);renderEvents();changed();$('batch-dialog').close();pendingEvents=null;toast('批量事件已添加。');});
 
 const fileName=()=>(match.title||'比赛赛果').replace(/[\\/:*?"<>|]/g,'-').slice(0,80);
-function canExport(){if(!requireTeams())return false;const missingKeepers=missingGoalkeepers(match,records);if(missingKeepers.length){toast(`请为${missingKeepers.join('、')}各选择一名首发守门员。`);return false;}const missing=missingNumbers(match,records);if(!missing.length)return true;toast(`请先填写首发与事件球员的本场号码：${missing.slice(0,3).join('、')}${missing.length>3?'等':''}。`);return false;}
+function canExport(){if(!requireTeams())return false;const missingKeepers=missingGoalkeepers(match,records);if(missingKeepers.length){toast(`请为${missingKeepers.join('、')}${missingKeepers.length>1?'各':''}选择一名首发守门员。`);return false;}const missing=missingNumbers(match,records);if(!missing.length)return true;toast(`请先填写首发与事件球员的本场号码：${missing.slice(0,3).join('、')}${missing.length>3?'等':''}。`);return false;}
 $('download-svg').addEventListener('click',()=>{if(canExport())download(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),`${fileName()}.svg`);});
 $('download-png').addEventListener('click',async()=>{
   if(!canExport())return;

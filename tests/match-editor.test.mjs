@@ -27,7 +27,7 @@ test('unnumbered goalkeepers can appear in lineups and events while outfield num
   setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
   setMatchNumber(match,records,'home',zhang,'');setMatchNumber(match,records,'away',wang,'');
   match.events=parseBatch('12,红队,张三','黄牌',match,records);
-  assert.deepEqual(missingNumbers(match,records),[]);assert.equal(playerLabel(records,match,match.events[0]),'GK 张三');
+  assert.deepEqual(missingNumbers(match,records),[]);assert.equal(playerLabel(records,match,match.events[0]),'GK 张三(GK)');
   setMatchNumber(match,records,'home',li,'');assert.deepEqual(missingNumbers(match,records),['红队 · 李四']);
   setGoalkeeper(match,records,'home',li);assert.deepEqual(missingNumbers(match,records),['红队 · 张三']);
 });
@@ -36,13 +36,22 @@ test('goalkeeper numbers remain optional, unique when supplied, and zero is disp
   const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};setGoalkeeper(match,records,'home',zhang);
   assert.throws(()=>setMatchNumber(match,records,'home',zhang,'7'),/已有球员/);
   setMatchNumber(match,records,'home',zhang,'0');
-  assert.equal(playerLabel(records,match,{side:'home',playerId:zhang}),'0 张三');
+  assert.equal(playerLabel(records,match,{side:'home',playerId:zhang}),'0 张三(GK)');
 });
 
 test('poster marks both numbered and unnumbered goalkeepers',()=>{
   const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
   setMatchNumber(match,records,'home',zhang,'');
-  const svg=renderPoster(match,records);assert.ok(svg.includes('>GK</text>'));assert.ok(svg.includes('>张三</text>'));assert.ok(svg.includes('>王五</text>'));assert.ok(!svg.includes('（门将）'));assert.ok(svg.includes('>10</text>'));
+  const svg=renderPoster(match,records);assert.ok(svg.includes('>GK</text>'));assert.ok(svg.includes('>张三(GK)</text>'));assert.ok(svg.includes('>王五(GK)</text>'));assert.ok(!svg.includes('（门将）'));assert.ok(svg.includes('>10</text>'));
+});
+
+test('goalkeepers lead both lineups while other starters keep their selection order',()=>{
+  const extra={tournament:'杯赛',team:'蓝队',number:'',name:'赵六'},all=[...records,extra],zhao=playerId(extra);
+  const match=readyMatch();match.starters={home:[li,zhang],away:[zhao,wang]};setGoalkeeper(match,all,'home',zhang);setGoalkeeper(match,all,'away',wang);
+  const before=JSON.stringify(match.starters),svg=renderPoster(match,all);
+  assert.ok(svg.indexOf('>张三(GK)</text>')<svg.indexOf('>李四</text>'));assert.ok(svg.indexOf('>王五(GK)</text>')<svg.indexOf('>赵六</text>'));
+  assert.equal(JSON.stringify(match.starters),before);
+  setGoalkeeper(match,all,'home',li);const changed=renderPoster(match,all);assert.ok(changed.indexOf('>李四(GK)</text>')<changed.indexOf('>张三</text>'));
 });
 
 test('poster title lines are centered',()=>{
