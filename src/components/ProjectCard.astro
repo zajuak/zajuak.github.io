@@ -7,6 +7,6 @@ const { project } = Astro.props;
 const external = /^https?:\/\//.test(project.href);
 ---
 <a class:list={['project-card', {'has-project-logo': Boolean(project.image)}]} href={project.href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
-  <div class="project-image"><div class="project-illustration"><ProjectArt type={project.art}/></div>{project.image && <img class="project-logo" src={url(project.image)} alt="北大足协PKUFA" width="640" height="640" loading="lazy" decoding="async"/>}<span class="project-number">EXPERIMENT / {project.number}</span><span class="project-open"><Icon name="external" size={17}/></span></div>
+  <div class="project-image">{project.image && <img class="project-logo" src={url(project.image)} alt="北大足协PKUFA" width="640" height="640" loading="lazy" decoding="async"/>}<div class="project-illustration"><ProjectArt type={project.art}/></div><span class="project-number">EXPERIMENT / {project.number}</span><span class="project-open"><Icon name="external" size={17}/></span></div>
   <div class="project-copy"><p class="eyebrow">{project.subtitle}</p><h3>{project.title}<Icon name="arrow"/></h3>{project.description && <p>{project.description}</p>}<div class="tags">{project.tags.map(tag=><span>{tag}</span>)}</div></div>
 </a>
