@@ -26,14 +26,13 @@ function syncControls(){
   for(const side of ['home','away'])fill($(`${side}-team`),teams().map(n=>[n,n,n===match[side==='home'?'away':'home']]),match[side],side==='home'?'选择主队':'选择客队');
   $('official-team-selects').hidden=custom;$('custom-match-fields').hidden=!custom;$('lineup-editor').hidden=custom;
   $('match-title').value=match.title;$('show-lineups').checked=match.showLineups;
-  const current=records.filter(r=>r.tournament===match.tournament);
   if(custom){
     if(!customDirty){
       $('custom-home-name').value=match.home;$('custom-away-name').value=match.away;
       for(const side of ['home','away'])$(`custom-${side}-starters`).value=rosterFor(records,match,side).map(p=>{const number=matchNumber(match,side,p);return `${number?number+' ':''}${p.name}`;}).join('\n');
     }
-    $('roster-summary').textContent=current.length?`${match.starters.home.length} 名主队首发 · ${match.starters.away.length} 名客队首发`:'手动填写双方球队与首发名单。';
-  }else $('roster-summary').textContent=current.length?`${teams().length} 支球队 · ${current.length} 名球员`:'暂无官方报名名单。';
+  }
+  $('roster-summary').textContent='';$('roster-summary').hidden=true;
   $('download-svg').disabled=!rostersReady && !custom;$('download-png').disabled=!rostersReady && !custom;
   renderLineup();renderEvents();render();
 }
@@ -125,7 +124,7 @@ document.querySelectorAll('[data-close]').forEach(button=>button.addEventListene
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left || event.clientX>rect.right || event.clientY<rect.top || event.clientY>rect.bottom)dialog.close();}));
 function download(blob,name){const link=document.createElement('a'),url=URL.createObjectURL(blob);link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function loadRosters(){
-  $('roster-summary').classList.remove('error');$('roster-summary').textContent='正在读取官方报名名单…';
+  $('roster-summary').hidden=false;$('roster-summary').classList.remove('error');$('roster-summary').textContent='正在读取官方报名名单…';
   $('download-svg').disabled=true;$('download-png').disabled=true;
   try{
     const officialRecords=await loadOfficialRosters(new URL('./data/manifest.json',document.baseURI).href);
@@ -135,10 +134,10 @@ async function loadRosters(){
   }catch(error){
     if(isCustom()){
       records=records.filter(r=>r.tournament===CUSTOM_TOURNAMENT);rostersReady=true;syncControls();save();
-      $('roster-summary').classList.add('error');$('roster-summary').textContent='官方名单不可用，当前自定义比赛仍可继续编辑。';
+      $('roster-summary').hidden=false;$('roster-summary').classList.add('error');$('roster-summary').textContent='官方名单不可用，当前自定义比赛仍可继续编辑。';
     }else{
       records=[];match=blankMatch();rostersReady=false;syncControls();
-      $('roster-summary').classList.add('error');$('roster-summary').textContent=`官方名单加载失败：${error.message} 请检查 data 文件后刷新页面。`;
+      $('roster-summary').hidden=false;$('roster-summary').classList.add('error');$('roster-summary').textContent=`官方名单加载失败：${error.message} 请检查 data 文件后刷新页面。`;
     }
   }
 }
