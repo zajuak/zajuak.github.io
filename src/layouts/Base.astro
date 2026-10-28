@@ -16,7 +16,7 @@ const nav = [{label:'首页',key:'home',href:''},{label:'手记',key:'notes',hre
   <head>
     <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="description" content={description}/><meta name="generator" content={Astro.generator}/>
-    <meta name="color-scheme" content="light dark"/><meta name="theme-color" content="#f7f7f2"/>
+    <meta name="color-scheme" content="light dark"/><meta name="theme-color" content="#f4f8ff"/>
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')}/><link rel="canonical" href={canonical}/>
     <link rel="alternate" type="application/rss+xml" title={`${site.name}的手记`} href={url('rss.xml')}/>
     <meta property="og:title" content={pageTitle}/><meta property="og:description" content={description}/><meta property="og:type" content={article?'article':'website'}/><meta property="og:url" content={canonical}/><meta property="og:image" content={new URL(url('social.svg'),Astro.site)}/><meta name="twitter:card" content="summary"/>
@@ -56,7 +56,7 @@ const nav = [{label:'首页',key:'home',href:''},{label:'手记',key:'notes',hre
         results.replaceChildren();
         status.textContent=query?`找到 ${matches.length} 篇相关手记`:'全部手记';
         for(const item of matches){ const link=document.createElement('a');link.href=item.href;link.className='search-result';const cat=document.createElement('span');cat.textContent=item.category;const title=document.createElement('strong');title.textContent=item.title;const desc=document.createElement('p');desc.textContent=item.description;link.append(cat,title,desc);results.append(link);}
-        if(!matches.length){const empty=document.createElement('p');empty.className='search-empty';empty.textContent='还没有相关记录，试试「编译」「学习」或「网站」。';results.append(empty);}
+        if(!matches.length){const empty=document.createElement('p');empty.className='search-empty';empty.textContent=data.length?'没有找到相关文章，请尝试其他关键词。':'暂未发布文章。';results.append(empty);}
       }
       function openSearch(){dialog.showModal();document.body.classList.add('dialog-open');search();input.focus();}
       document.querySelectorAll('[data-open-search]').forEach(button=>button.addEventListener('click',openSearch));

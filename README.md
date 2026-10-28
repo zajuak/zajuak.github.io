@@ -2,7 +2,7 @@
 
 赵俊凯的个人网站，使用 Astro + Markdown 构建，面向 GitHub Pages 部署。
 
-设计采用米白纸感、深墨绿、衬线标题和原创程序化 SVG 插画。内容结构参考 [Astro Theme Pure](https://github.com/cworld1/astro-theme-pure)，未复制其主题源代码或素材。
+设计采用浅蓝背景、深蓝强调色、衬线标题和原创程序化 SVG 插画。内容结构参考 [Astro Theme Pure](https://github.com/cworld1/astro-theme-pure)，未复制其主题源代码或素材。
 
 ## 本地运行
 
@@ -46,7 +46,7 @@ order: 4
 
 文件名就是文章 URL；`order` 越大排序越靠前。正文使用 Markdown。分类按钮、搜索索引、RSS 和 Sitemap 随构建自动更新。
 
-首批三篇手记是建站时新整理的导读文章，不是历史课程报告的转载；项目只引用已有公开仓库，不含私人简历、成绩或未公开研究材料。
+手记初始为空，仅发布本人提供的文章；项目引用已有公开仓库。
 
 ## GitHub Pages
 
