@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { friends } from '../data/friends';
+---
+
+<Base title="友链" description="赵俊凯的友链，朋友们的网站与博客。" active="links">
+  <div class="container page-container friends-page">
+    <header class="page-heading">
+      <p class="eyebrow">FRIENDS & CONNECTIONS</p>
+      <h1>友链<span class="heading-dot">.</span></h1>
+      <p>朋友们的网站与博客。</p>
+    </header>
+    {friends.length > 0 ? (
+      <div class="friends-grid">
+        {friends.map(friend => (
+          <a class="friend-card" href={friend.href} target="_blank" rel="noopener noreferrer">
+            <span class="friend-initial" aria-hidden="true">{friend.name.slice(0, 1)}</span>
+            <div><h2>{friend.name}</h2><p>{friend.description}</p></div>
+            <Icon name="external" size={18}/>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <section class="friends-empty" aria-labelledby="friends-empty-title">
+        <span class="friends-empty-symbol" aria-hidden="true">↗</span>
+        <h2 id="friends-empty-title">暂无友链</h2>
+        <p>友链会在这里更新。</p>
+      </section>
+    )}
+  </div>
+</Base>

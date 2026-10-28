@@ -26,6 +26,7 @@ npm run preview
 ## 修改内容
 
 - `src/data/site.ts`：个人资料、社交链接、项目。
+- `src/data/friends.ts`：友链的名称、简介和网址；初始为空。
 - `src/content/notes/*.md`：Markdown 手记。
 - `src/styles/global.css`：颜色、排版、响应式样式。
 - `src/components/GardenArt.astro`、`ProjectArt.astro`：原创 SVG 插画。
@@ -64,7 +65,8 @@ SITE_URL=https://zajuak.github.io BASE_PATH=/personal-site npm run build
 
 ## 功能
 
-- 首页、手记列表、文章、项目、关于、404。
+- 首页、手记列表、文章、项目、友链、404。旧 `/about/` 地址跳转至 `/links/`。
+- 建站说明统一显示在每个页面的页脚小字中。
 - 文章分类、全文搜索（`⌘ K` / `Ctrl K` / `/`）、阅读时间和文章目录。
 - 可持久化的深浅主题、移动导航、阅读进度。
 - RSS、Sitemap、Canonical、Open Graph、跳转正文、键盘访问和减少动态效果支持。

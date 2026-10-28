@@ -6,6 +6,7 @@ export default defineConfig({
   base: process.env.BASE_PATH || '/',
   output: 'static',
   trailingSlash: 'always',
+  redirects: { '/about': '/links/' },
   integrations: [sitemap()],
   markdown: { shikiConfig: { theme: 'github-dark' } },
   devToolbar: { enabled: false },
