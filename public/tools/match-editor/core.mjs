@@ -4,9 +4,21 @@ export const ICONS = {进球:'G',点球:'PG',乌龙:'icon_w',助攻:'AS',黄牌:
 export const CUSTOM_TOURNAMENT = '__custom__';
 export const escapeXML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 export const key = (...parts) => JSON.stringify(parts);
-export const blankMatch = () => ({id:crypto.randomUUID(),tournament:'',home:'',away:'',title:'',starters:{home:[],away:[]},numbers:{home:{},away:{}},events:[],showLineups:true});
+export const blankMatch = () => ({id:crypto.randomUUID(),tournament:'',home:'',away:'',title:'',starters:{home:[],away:[]},goalkeepers:{home:'',away:''},numbers:{home:{},away:{}},events:[],showLineups:true});
 export const playerId = player => player.id || key(player.tournament,player.team,player.name);
 export const matchNumber = (match,side,player) => match.numbers?.[side]?.[typeof player==='string'?player:playerId(player)] || '';
+export const isGoalkeeper = (match,side,player) => {
+  const id=typeof player==='string'?player:playerId(player);
+  return match.goalkeepers?.[side]===id && match.starters[side].includes(id);
+};
+export function setGoalkeeper(match,records,side,id) {
+  if(!['home','away'].includes(side))throw new Error('请选择球队。');
+  if(id && (!match.starters[side].includes(id) || !rosterFor(records,match,side).some(p=>playerId(p)===id)))throw new Error('守门员必须是本队首发球员。');
+  match.goalkeepers||={home:'',away:''};match.goalkeepers[side]=id;
+}
+export function missingGoalkeepers(match,records) {
+  return ['home','away'].filter(side=>!match.goalkeepers?.[side] || !rosterFor(records,match,side).some(p=>isGoalkeeper(match,side,p))).map(side=>match[side]||(side==='home'?'主队':'客队'));
+}
 export function previousNumber(history,id,matchId) {
   return (history[id]||[]).find(entry=>entry.matchId!==matchId)?.number || '';
 }
@@ -37,7 +49,7 @@ export function setMatchNumber(match,records,side,id,value) {
 export function missingNumbers(match,records) {
   return ['home','away'].flatMap(side=>{
     const used=new Set([...(match.showLineups?match.starters[side]:[]),...match.events.filter(ev=>ev.side===side).map(ev=>ev.playerId)]);
-    return rosterFor(records,match,side).filter(p=>used.has(playerId(p)) && !matchNumber(match,side,p)).map(p=>`${match[side]} · ${p.name}`);
+    return rosterFor(records,match,side).filter(p=>used.has(playerId(p)) && !isGoalkeeper(match,side,p) && !matchNumber(match,side,p)).map(p=>`${match[side]} · ${p.name}`);
   });
 }
 export const validTime = time => /^(?:\d{1,3}(?:\+\d{1,3})?|点)$/.test(time);
@@ -100,7 +112,7 @@ export function restoreState(saved) {
   const counts=new Map();for(const p of source){const id=key(p.tournament,p.team,p.name);counts.set(id,(counts.get(id)||0)+1);}
   const records=source.map(r=>({...r,id:r.id || (counts.get(key(r.tournament,r.team,r.name))>1?key(r.tournament,r.team,r.name,r.number):playerId(r))}));
   validateRecords(records);
-  const match={...blankMatch(),...saved.match,numbers:saved.match?.numbers||{home:{},away:{}}};
+  const match={...blankMatch(),...saved.match,goalkeepers:{home:'',away:'',...saved.match?.goalkeepers},numbers:saved.match?.numbers||{home:{},away:{}}};
   let numberHistory=mergeNumberHistories({},saved.numberHistory,records);
   if(legacy){
     for(const side of ['home','away']) {
@@ -118,11 +130,12 @@ export function reconcileOfficialDraft(match,numberHistory,records) {
     const tournament=records[0]?.tournament||'';
     return {match:{...blankMatch(),tournament,title:tournament},numberHistory:mergeNumberHistories({},numberHistory,records)};
   }
-  const next={...match,starters:{home:[],away:[]},numbers:{home:{},away:{}},events:[...match.events]},validPlayers={};
+  const next={...match,starters:{home:[],away:[]},goalkeepers:{home:'',away:''},numbers:{home:{},away:{}},events:[...match.events]},validPlayers={};
   for(const side of ['home','away']){
     const roster=rosterFor(records,match,side),ids=new Set(roster.map(playerId));validPlayers[side]=ids;
     if(!match[side] || !ids.size){next[side]='';continue;}
     next.starters[side]=match.starters[side].filter(id=>ids.has(id));
+    if(next.starters[side].includes(match.goalkeepers?.[side]))next.goalkeepers[side]=match.goalkeepers[side];
     next.numbers[side]=Object.fromEntries(Object.entries(match.numbers[side]||{}).filter(([id])=>ids.has(id)));
   }
   next.events=match.events.filter(event=>validPlayers[event.side]?.has(event.playerId));
@@ -168,7 +181,9 @@ export function calculateScore(events) {
 }
 export const playerLabel = (records,match,event) => {
   const p=rosterFor(records,match,event.side).find(p=>playerId(p)===event.playerId);
-  return p?`${matchNumber(match,event.side,p)||'待填号码'} ${p.name}`:'球员（名单缺失）';
+  if(!p)return '球员（名单缺失）';
+  const keeper=isGoalkeeper(match,event.side,p),number=matchNumber(match,event.side,p);
+  return `${number||(keeper?'GK':'待填号码')} ${p.name}`;
 };
 
 // The same self-contained SVG drives the live poster and PNG/SVG downloads.
@@ -180,7 +195,7 @@ export function renderPoster(match,records,icons={}) {
   const titleLines=wrap(match.title||match.tournament||'足球比赛赛果',30);
   const titleHeight=42+titleLines.length*28;
   let y=titleHeight;
-  const body=[`<rect width="800" height="${titleHeight}" fill="#f7f7f8"/><rect x="24" y="24" width="4" height="${titleHeight-42}" fill="#8c0000"/>`,...titleLines.map((line,i)=>text(46,44+i*28,line,23))];
+  const body=[`<rect width="800" height="${titleHeight}" fill="#f7f7f8"/>`,...titleLines.map((line,i)=>text(400,44+i*28,line,23,'#323745','middle'))];
   const teamLines=[wrap(match.home||'主队',11),wrap(match.away||'客队',11)];
   const scoreHeight=100+(Math.max(...teamLines.map(lines=>lines.length))-1)*25;
   body.push(`<rect y="${y}" width="800" height="${scoreHeight}" fill="#ebeced"/>`);
@@ -223,7 +238,8 @@ export function renderPoster(match,records,icons={}) {
       wrap(match[side]|| (i?'客队':'主队'),16).forEach(line=>{body.push(text(x,ly,line,19,'#616a86','start',600));ly+=26;});ly+=12;
       if(!selected[side].length){body.push(text(x,ly,'尚未选择首发',17,'#9095a0'));ly+=34;}
       for(const p of selected[side]) {
-        body.push(`<rect x="${x}" y="${ly-20}" width="36" height="28" rx="5" fill="#eeecf8"/>`,text(x+18,ly,matchNumber(match,side,p)||'—',16,'#6257a8','middle',600));
+        const keeper=isGoalkeeper(match,side,p);
+        body.push(`<rect x="${x}" y="${ly-20}" width="36" height="28" rx="5" fill="${keeper?'#e5f2e9':'#eeecf8'}"/>`,text(x+18,ly,matchNumber(match,side,p)||(keeper?'GK':'—'),16,keeper?'#277744':'#6257a8','middle',600));
         const lines=wrap(p.name,14);lines.forEach((line,j)=>body.push(text(x+50,ly+j*24,line,19)));ly+=Math.max(36,lines.length*24+8);
       }
       used=Math.max(used,ly-y);

@@ -33,6 +33,8 @@
         </section>
         <section class="card">
           <div class="section-heading"><h2><span>03</span> 首发与本场号码</h2><label class="check-inline"><input id="show-lineups" type="checkbox" checked>显示在图中</label></div>
+          <div class="two-columns"><div><label for="home-goalkeeper">主队首发守门员</label><select id="home-goalkeeper"><option value="">先选择首发球员</option></select></div><div><label for="away-goalkeeper">客队首发守门员</label><select id="away-goalkeeper"><option value="">先选择首发球员</option></select></div></div>
+          <p class="hint">双方首发各指定一名守门员。守门员号码可留空，图中号码位置显示 GK；其他首发球员需填写号码。自定义比赛请先应用首发，再选择守门员。</p>
           <div id="lineup-editor">
             <p class="hint">每场填写球员号码，再勾选首发。下方显示上一次比赛的号码，点击“沿用”即可填入；新比赛不会自动沿用。首发按勾选顺序展示。</p>
             <div class="lineup-tabs" role="tablist" aria-label="首发球队"><button id="home-lineup-tab" role="tab" aria-selected="true" aria-controls="lineup-panel" class="active">主队 <span id="home-count">0 人</span></button><button id="away-lineup-tab" role="tab" aria-selected="false" aria-controls="lineup-panel">客队 <span id="away-count">0 人</span></button></div>

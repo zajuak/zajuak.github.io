@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseDelimited,compareTimes,parseBatch,calculateScore,renderPoster,blankMatch,playerLabel,playerId,matchNumber,setMatchNumber,previousNumber,rememberNumber,restoreState,missingNumbers,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,CUSTOM_TOURNAMENT} from '../public/tools/match-editor/core.mjs';
+import {parseDelimited,compareTimes,parseBatch,calculateScore,renderPoster,blankMatch,playerLabel,playerId,matchNumber,setMatchNumber,previousNumber,rememberNumber,restoreState,missingNumbers,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,CUSTOM_TOURNAMENT,isGoalkeeper,setGoalkeeper,missingGoalkeepers} from '../public/tools/match-editor/core.mjs';
 import {registrationTableToRecords,loadOfficialRosters} from '../public/tools/match-editor/importers.mjs';
 import {readFile} from 'node:fs/promises';
 const records=[
@@ -10,6 +10,62 @@ const records=[
 ];
 const [zhang,li,wang]=records.map(playerId);
 function readyMatch(){const match={...blankMatch(),tournament:'杯赛',home:'红队',away:'蓝队'};setMatchNumber(match,records,'home',zhang,'1');setMatchNumber(match,records,'home',li,'7');setMatchNumber(match,records,'away',wang,'10');return match;}
+
+test('each side selects exactly one goalkeeper from its own starters',()=>{
+  const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};
+  assert.deepEqual(missingGoalkeepers(match,records),['红队','蓝队']);
+  setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
+  assert.deepEqual(missingGoalkeepers(match,records),[]);
+  setGoalkeeper(match,records,'home',li);assert.equal(isGoalkeeper(match,'home',zhang),false);assert.equal(isGoalkeeper(match,'home',li),true);
+  assert.throws(()=>setGoalkeeper(match,records,'home',wang),/本队首发/);
+  match.starters.home=[zhang];assert.throws(()=>setGoalkeeper(match,records,'home',li),/本队首发/);
+  assert.deepEqual(missingGoalkeepers(match,records),['红队']);
+});
+
+test('unnumbered goalkeepers can appear in lineups and events while outfield numbers remain required',()=>{
+  const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};
+  setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
+  setMatchNumber(match,records,'home',zhang,'');setMatchNumber(match,records,'away',wang,'');
+  match.events=parseBatch('12,红队,张三','黄牌',match,records);
+  assert.deepEqual(missingNumbers(match,records),[]);assert.equal(playerLabel(records,match,match.events[0]),'GK 张三');
+  setMatchNumber(match,records,'home',li,'');assert.deepEqual(missingNumbers(match,records),['红队 · 李四']);
+  setGoalkeeper(match,records,'home',li);assert.deepEqual(missingNumbers(match,records),['红队 · 张三']);
+});
+
+test('goalkeeper numbers remain optional, unique when supplied, and zero is displayed correctly',()=>{
+  const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};setGoalkeeper(match,records,'home',zhang);
+  assert.throws(()=>setMatchNumber(match,records,'home',zhang,'7'),/已有球员/);
+  setMatchNumber(match,records,'home',zhang,'0');
+  assert.equal(playerLabel(records,match,{side:'home',playerId:zhang}),'0 张三');
+});
+
+test('poster marks both numbered and unnumbered goalkeepers',()=>{
+  const match=readyMatch();match.starters={home:[zhang,li],away:[wang]};setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
+  setMatchNumber(match,records,'home',zhang,'');
+  const svg=renderPoster(match,records);assert.ok(svg.includes('>GK</text>'));assert.ok(svg.includes('>张三</text>'));assert.ok(svg.includes('>王五</text>'));assert.ok(!svg.includes('（门将）'));assert.ok(svg.includes('>10</text>'));
+});
+
+test('poster title lines are centered',()=>{
+  const match=readyMatch();match.title='2026年新生杯';
+  assert.match(renderPoster(match,records),/<text x="400" y="44"[^>]*text-anchor="middle"[^>]*>2026年新生杯<\/text>/);
+  match.title='甲'.repeat(40);
+  const svg=renderPoster(match,records);assert.match(svg,/<text x="400" y="72"[^>]*text-anchor="middle"/);
+});
+
+test('goalkeepers persist across reloads and are cleared if no longer valid starters',()=>{
+  const match=readyMatch();match.starters={home:[zhang],away:[wang]};setGoalkeeper(match,records,'home',zhang);setGoalkeeper(match,records,'away',wang);
+  const saved=restoreState(JSON.parse(JSON.stringify({version:2,records,match,numberHistory:{}})));
+  assert.deepEqual(saved.match.goalkeepers,{home:zhang,away:wang});
+  saved.match.starters.home=[];const reconciled=reconcileOfficialDraft(saved.match,{},records);assert.equal(reconciled.match.goalkeepers.home,'');assert.equal(reconciled.match.goalkeepers.away,wang);
+  const old={...match};delete old.goalkeepers;assert.deepEqual(restoreState({version:2,records,match:old}).match.goalkeepers,{home:'',away:''});
+});
+
+test('custom matches support a goalkeeper with only a name on each side',()=>{
+  const home=parseCustomStarters('张三\n7 李四',CUSTOM_TOURNAMENT,'红队'),away=parseCustomStarters('王五',CUSTOM_TOURNAMENT,'蓝队'),custom=[...home,...away];
+  const match={...blankMatch(),tournament:CUSTOM_TOURNAMENT,home:'红队',away:'蓝队'};
+  for(const [side,roster] of [['home',home],['away',away]]){match.starters[side]=roster.map(playerId);for(const p of roster)setMatchNumber(match,custom,side,playerId(p),p.number);setGoalkeeper(match,custom,side,playerId(roster[0]));}
+  assert.deepEqual(missingGoalkeepers(match,custom),[]);assert.deepEqual(missingNumbers(match,custom),[]);
+});
 
 test('delimited input supports quoted fields, BOM and Excel clipboard',()=>{
   assert.deepEqual(parseDelimited('\uFEFF赛事,球队,姓名\r\n杯赛,"院,队","张""三"'),[['赛事','球队','姓名'],['杯赛','院,队','张"三']]);
