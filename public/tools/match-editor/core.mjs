@@ -109,17 +109,18 @@ export function parseCustomStarters(text,tournament,team) {
 // Upgrade old number-based relationships before loading the official rosters.
 export function restoreState(saved) {
   if(!saved || ![1,2].includes(saved.version))return {records:[],match:blankMatch(),numberHistory:{}};
-  const oldName='2026-27五人制女足北大杯',newName='2026-27女足北大杯';
-  if(saved.records?.some(p=>p.tournament===oldName) || saved.match?.tournament===oldName){
+  const aliases={'2026新生杯':'2026年新生杯男子足球赛','2026-27五人制女足北大杯':'2026-27北大杯女子足球赛','2026-27女足北大杯':'2026-27北大杯女子足球赛'};
+  const renamed=name=>Object.hasOwn(aliases,name)?aliases[name]:name;
+  if(saved.records?.some(p=>renamed(p.tournament)!==p.tournament) || renamed(saved.match?.tournament)!==saved.match?.tournament){
     saved=structuredClone(saved);
     const ids=new Map();
-    for(const player of saved.records||[])if(player.tournament===oldName){
-      const oldId=playerId(player);player.tournament=newName;player.id=key(newName,player.team,player.name);ids.set(oldId,player.id);
+    for(const player of saved.records||[])if(renamed(player.tournament)!==player.tournament){
+      const oldId=playerId(player);player.tournament=renamed(player.tournament);player.id=key(player.tournament,player.team,player.name);ids.set(oldId,player.id);
     }
     const rename=id=>ids.get(id)||id;
     saved.numberHistory=Object.fromEntries(Object.entries(saved.numberHistory||{}).map(([id,entries])=>[rename(id),entries]));
-    if(saved.match?.tournament===oldName){
-      const match=saved.match;match.tournament=newName;if(match.title===oldName)match.title=newName;
+    if(renamed(saved.match?.tournament)!==saved.match?.tournament){
+      const match=saved.match,oldName=match.tournament;match.tournament=renamed(oldName);if(match.title===oldName)match.title=match.tournament;
       for(const side of ['home','away']){
         if(match.starters?.[side])match.starters[side]=match.starters[side].map(rename);
         if(match.goalkeepers?.[side])match.goalkeepers[side]=rename(match.goalkeepers[side]);

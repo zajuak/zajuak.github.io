@@ -2,11 +2,11 @@
   "version": 1,
   "tournaments": [
     {
-      "name": "2026新生杯",
+      "name": "2026年新生杯男子足球赛",
       "roster": "rosters/tournament-1.json"
     },
     {
-      "name": "2026-27女足北大杯",
+      "name": "2026-27北大杯女子足球赛",
       "roster": "rosters/tournament-2.json",
       "lineups": false
     }

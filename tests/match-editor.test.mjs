@@ -84,9 +84,9 @@ test('delimited input supports quoted fields, BOM and Excel clipboard',()=>{
 
 test('registration tables split both name columns and preserve a final left-only player',()=>{
   const header=['姓名','球员 身份','备注','是否 首发','号码','姓名','球员 身份','备注','是否 首发','号码'];
-  const result=registrationTableToRecords([header,['张三','','','','','李四','','','',''],['王五','','','','','','','','','']],{tournament:'2026新生杯',team:'红队'});
+  const result=registrationTableToRecords([header,['张三','','','','','李四','','','',''],['王五','','','','','','','','','']],{tournament:'2026年新生杯男子足球赛',team:'红队'});
   assert.deepEqual(result.map(r=>r.name),['张三','李四','王五']);
-  assert.ok(result.every(r=>r.tournament==='2026新生杯' && r.team==='红队' && r.number===''));
+  assert.ok(result.every(r=>r.tournament==='2026年新生杯男子足球赛' && r.team==='红队' && r.number===''));
   assert.throws(()=>registrationTableToRecords([['姓名'],['张三']],{tournament:'杯赛',team:'红队'}),/名单表格/);
   assert.throws(()=>registrationTableToRecords([header],{tournament:'杯赛',team:'红队'}),/没有球员/);
 });
@@ -211,12 +211,12 @@ test('published rosters load both tournaments without exposing DOCX fields',asyn
   });
   const loaded=await loadOfficialRosters('https://roster.test/data/manifest.json');
   assert.equal(loaded.length,621);
-  for(const [name,teams,players] of [['2026新生杯',18,486],['2026-27女足北大杯',8,135]]){
+  for(const [name,teams,players] of [['2026年新生杯男子足球赛',18,486],['2026-27北大杯女子足球赛',8,135]]){
     const roster=loaded.filter(r=>r.tournament===name);assert.equal(roster.length,players);assert.equal(new Set(roster.map(r=>r.team)).size,teams);
   }
   assert.ok(loaded.every(r=>r.number===''));
   const official=await loadOfficialData('https://roster.test/data/manifest.json');
-  assert.deepEqual(official.tournaments,[{name:'2026新生杯',lineups:true},{name:'2026-27女足北大杯',lineups:false}]);
+  assert.deepEqual(official.tournaments,[{name:'2026年新生杯男子足球赛',lineups:true},{name:'2026-27北大杯女子足球赛',lineups:false}]);
   const published=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-1.json',import.meta.url),'utf8'));
   const women=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-2.json',import.meta.url),'utf8'));
   assert.ok([...published,...women].every(r=>Object.keys(r).sort().join(',')==='name,team'));
@@ -239,16 +239,17 @@ test('competition without lineups exports events without starting goalkeepers or
   setMatchNumber(match,records,'home',li,'');assert.deepEqual(missingNumbers(match,records),['红队 · 李四']);
 });
 
-test('women tournament rename preserves draft events, numbers, history and custom titles',()=>{
-  const oldName='2026-27五人制女足北大杯',newName='2026-27女足北大杯';
+for(const [oldName,newName] of [['2026新生杯','2026年新生杯男子足球赛'],['2026-27五人制女足北大杯','2026-27北大杯女子足球赛'],['2026-27女足北大杯','2026-27北大杯女子足球赛']])test(`rename ${oldName} preserves draft relationships and custom titles`,()=>{
   const roster=[{tournament:oldName,team:'元培',name:'张三',number:''},{tournament:oldName,team:'医学',name:'李四',number:''}];
   const id=playerId(roster[0]),nextId=playerId({...roster[0],tournament:newName});
   const match={...blankMatch(),tournament:oldName,title:oldName,home:'元培',away:'医学',lineupsEnabled:false,showLineups:false};
+  match.starters.home=[id];match.goalkeepers.home=id;
   setMatchNumber(match,roster,'home',id,'7');match.events=createPlayerEvents('进球','12','home',[id],match,roster);
   const saved={version:2,records:roster,match,numberHistory:rememberNumber({},id,'previous','9')};
   const restored=restoreState(saved),official=roster.map(p=>({...p,tournament:newName}));
   const reconciled=reconcileOfficialDraft(restored.match,restored.numberHistory,official);
   assert.equal(reconciled.match.tournament,newName);assert.equal(reconciled.match.title,newName);
+  assert.deepEqual(reconciled.match.starters.home,[nextId]);assert.equal(reconciled.match.goalkeepers.home,nextId);
   assert.equal(reconciled.match.events[0].playerId,nextId);assert.equal(matchNumber(reconciled.match,'home',nextId),'7');
   assert.equal(previousNumber(reconciled.numberHistory,nextId,match.id),'9');assert.equal(calculateScore(reconciled.match.events).home,1);
   assert.equal(saved.match.tournament,oldName);

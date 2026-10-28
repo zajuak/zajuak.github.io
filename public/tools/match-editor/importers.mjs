@@ -1,4 +1,4 @@
-import {validateRecords} from './core.mjs?v=20261028-women-name';
+import {validateRecords} from './core.mjs?v=20261028-tournament-names';
 const WORD='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 function wordDocument(xml) {

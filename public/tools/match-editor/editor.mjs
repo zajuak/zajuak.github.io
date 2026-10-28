@@ -1,5 +1,5 @@
-import {TYPES,ICONS,CUSTOM_TOURNAMENT,escapeXML as esc,blankMatch,rosterFor,parseBatch,sortedEvents,calculateScore,playerLabel,renderPoster,playerId,matchNumber,previousNumber,rememberNumber,setMatchNumber,missingNumbers,restoreState,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,isGoalkeeper,setGoalkeeper,missingGoalkeepers} from './core.mjs?v=20261028-women-name';
-import {loadOfficialData} from './importers.mjs?v=20261028-women-name';
+import {TYPES,ICONS,CUSTOM_TOURNAMENT,escapeXML as esc,blankMatch,rosterFor,parseBatch,sortedEvents,calculateScore,playerLabel,renderPoster,playerId,matchNumber,previousNumber,rememberNumber,setMatchNumber,missingNumbers,restoreState,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,isGoalkeeper,setGoalkeeper,missingGoalkeepers} from './core.mjs?v=20261028-tournament-names';
+import {loadOfficialData} from './importers.mjs?v=20261028-tournament-names';
 const $=id=>document.getElementById(id), storageKey='junkai-match-editor-v1';
 let tournaments=[],records=[],match=blankMatch(),numberHistory={},lineupSide='home',editingId=null,pendingEvents=null,svg='',icons={},draggedId=null,toastTimer,rostersReady=false,customDirty=false;
 try {
