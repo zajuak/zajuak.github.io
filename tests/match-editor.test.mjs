@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseDelimited,compareTimes,parseBatch,calculateScore,renderPoster,blankMatch,playerLabel,playerId,matchNumber,setMatchNumber,previousNumber,rememberNumber,restoreState,missingNumbers,createPlayerEvents,reconcileOfficialDraft,parseCustomStarters,CUSTOM_TOURNAMENT,isGoalkeeper,setGoalkeeper,missingGoalkeepers} from '../public/tools/match-editor/core.mjs';
-import {registrationTableToRecords,loadOfficialRosters} from '../public/tools/match-editor/importers.mjs';
+import {registrationTableToRecords,loadOfficialRosters,loadOfficialData} from '../public/tools/match-editor/importers.mjs';
 import {readFile} from 'node:fs/promises';
 const records=[
   {tournament:'杯赛',team:'红队',number:'',name:'张三'},
@@ -87,8 +87,15 @@ test('registration tables split both name columns and preserve a final left-only
   const result=registrationTableToRecords([header,['张三','','','','','李四','','','',''],['王五','','','','','','','','','']],{tournament:'2026新生杯',team:'红队'});
   assert.deepEqual(result.map(r=>r.name),['张三','李四','王五']);
   assert.ok(result.every(r=>r.tournament==='2026新生杯' && r.team==='红队' && r.number===''));
-  assert.throws(()=>registrationTableToRecords([['姓名'],['张三']],{tournament:'杯赛',team:'红队'}),/10 列/);
+  assert.throws(()=>registrationTableToRecords([['姓名'],['张三']],{tournament:'杯赛',team:'红队'}),/名单表格/);
   assert.throws(()=>registrationTableToRecords([header],{tournament:'杯赛',team:'红队'}),/没有球员/);
+});
+
+test('women futsal registration reads only player names from the single-column form',()=>{
+  const header=['序号','球员姓名','球员身份','是否登场','球员号码','备注'];
+  const result=registrationTableToRecords([header,['1','张三','自由球员','是','7','备注内容'],['2','','','','',''],['3','李四','普通球员','','8','']],{tournament:'女足北大杯',team:'元培'});
+  assert.deepEqual(result.map(r=>[r.name,r.number]),[['张三',''],['李四','']]);
+  assert.ok(result.every(r=>Object.keys(r).sort().join(',')==='name,number,sourceRow,team,tournament'));
 });
 
 test('custom starters accept names with optional numbers and reject duplicates or invalid input',()=>{
@@ -196,17 +203,23 @@ test('stoppage sorting, scoring and poster escaping remain correct',()=>{
   assert.ok(svg.indexOf('>7</text>',svg.indexOf('首发阵容'))<svg.indexOf('>1</text>',svg.indexOf('首发阵容')));
 });
 
-test('published rosters load all 18 teams and 486 players without exposing DOCX fields',async t=>{
+test('published rosters load both tournaments without exposing DOCX fields',async t=>{
   t.mock.method(globalThis,'fetch',async url=>{
     const path=new URL(String(url)).pathname.replace('/data/','');
     const body=await readFile(new URL(`../public/tools/match-editor/data/${path}`,import.meta.url));
     return new Response(body,{headers:{'content-type':'application/json'}});
   });
   const loaded=await loadOfficialRosters('https://roster.test/data/manifest.json');
-  assert.equal(loaded.length,486);assert.equal(new Set(loaded.map(r=>r.team)).size,18);
-  assert.ok(loaded.every(r=>r.tournament==='2026新生杯' && r.number===''));
+  assert.equal(loaded.length,621);
+  for(const [name,teams,players] of [['2026新生杯',18,486],['2026-27五人制女足北大杯',8,135]]){
+    const roster=loaded.filter(r=>r.tournament===name);assert.equal(roster.length,players);assert.equal(new Set(roster.map(r=>r.team)).size,teams);
+  }
+  assert.ok(loaded.every(r=>r.number===''));
+  const official=await loadOfficialData('https://roster.test/data/manifest.json');
+  assert.deepEqual(official.tournaments,[{name:'2026新生杯',lineups:true},{name:'2026-27五人制女足北大杯',lineups:false}]);
   const published=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-1.json',import.meta.url),'utf8'));
-  assert.ok(published.every(r=>Object.keys(r).sort().join(',')==='name,team'));
+  const women=JSON.parse(await readFile(new URL('../public/tools/match-editor/data/rosters/tournament-2.json',import.meta.url),'utf8'));
+  assert.ok([...published,...women].every(r=>Object.keys(r).sort().join(',')==='name,team'));
 });
 
 test('official loader rejects failed or invalid roster responses',async t=>{
@@ -214,4 +227,14 @@ test('official loader rejects failed or invalid roster responses',async t=>{
   await assert.rejects(loadOfficialRosters('https://roster.test/manifest.json'),/503/);
   globalThis.fetch=async url=>new Response(JSON.stringify(String(url).endsWith('manifest.json')?{version:1,tournaments:[{name:'杯赛',roster:'names.json'}]}:[{team:'红队',name:''}]));
   await assert.rejects(loadOfficialRosters('https://roster.test/manifest.json'),/缺少姓名/);
+});
+
+
+test('competition without lineups exports events without starting goalkeepers or a lineup section',()=>{
+  const match=readyMatch();match.lineupsEnabled=false;match.showLineups=true;match.starters.home=[zhang];
+  setMatchNumber(match,records,'home',zhang,'');
+  assert.deepEqual(missingGoalkeepers(match,records),[]);assert.deepEqual(missingNumbers(match,records),[]);
+  match.events=createPlayerEvents('进球','12','home',[li],match,records);
+  const svg=renderPoster(match,records);assert.ok(!svg.includes('首发阵容'));assert.ok(svg.includes('7 李四'));assert.equal(calculateScore(match.events).home,1);
+  setMatchNumber(match,records,'home',li,'');assert.deepEqual(missingNumbers(match,records),['红队 · 李四']);
 });

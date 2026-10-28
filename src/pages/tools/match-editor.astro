@@ -6,7 +6,7 @@
   <title>足球赛果图编辑器 · zajuka</title>
   <link rel="stylesheet" href="./editor.css">
   <script src="./vendor/fflate.min.js" defer></script>
-  <script type="module" src="./editor.mjs"></script>
+  <script type="module" src="./editor.mjs?v=20261028-women"></script>
 </head>
 <body>
   <div class="app">
@@ -32,12 +32,12 @@
           <p class="hint">乌龙球记录在犯规球员所属球队，分数计入对方；“点”表示点球大战，单独显示。</p>
         </section>
         <section class="card">
-          <div class="section-heading"><h2><span>03</span> 首发与本场号码</h2><label class="check-inline"><input id="show-lineups" type="checkbox" checked>显示在图中</label></div>
-          <div class="two-columns"><div><label for="home-goalkeeper">主队首发守门员</label><select id="home-goalkeeper"><option value="">先选择首发球员</option></select></div><div><label for="away-goalkeeper">客队首发守门员</label><select id="away-goalkeeper"><option value="">先选择首发球员</option></select></div></div>
-          <p class="hint">双方首发各指定一名守门员。守门员号码可留空，图中号码位置显示 GK；其他首发球员需填写号码。自定义比赛请先应用首发，再选择守门员。</p>
+          <div class="section-heading"><h2><span>03</span> <b id="lineup-heading">首发与本场号码</b></h2><label id="show-lineups-control" class="check-inline"><input id="show-lineups" type="checkbox" checked>显示在图中</label></div>
+          <div id="goalkeeper-fields" class="two-columns"><div><label for="home-goalkeeper">主队首发守门员</label><select id="home-goalkeeper"><option value="">先选择首发球员</option></select></div><div><label for="away-goalkeeper">客队首发守门员</label><select id="away-goalkeeper"><option value="">先选择首发球员</option></select></div></div>
+          <p id="goalkeeper-hint" class="hint">双方首发各指定一名守门员。守门员号码可留空，图中号码位置显示 GK；其他首发球员需填写号码。自定义比赛请先应用首发，再选择守门员。</p>
           <div id="lineup-editor">
-            <p class="hint">每场填写球员号码，再勾选首发。下方显示上一次比赛的号码，点击“沿用”即可填入；新比赛不会自动沿用。守门员排在首位，其余首发按勾选顺序展示。</p>
-            <div class="lineup-tabs" role="tablist" aria-label="首发球队"><button id="home-lineup-tab" role="tab" aria-selected="true" aria-controls="lineup-panel" class="active">主队 <span id="home-count">0 人</span></button><button id="away-lineup-tab" role="tab" aria-selected="false" aria-controls="lineup-panel">客队 <span id="away-count">0 人</span></button></div>
+            <p id="lineup-hint" class="hint">每场填写球员号码，再勾选首发。下方显示上一次比赛的号码，点击“沿用”即可填入；新比赛不会自动沿用。守门员排在首位，其余首发按勾选顺序展示。</p>
+            <div id="lineup-tabs" class="lineup-tabs" role="tablist" aria-label="首发球队"><button id="home-lineup-tab" role="tab" aria-selected="true" aria-controls="lineup-panel" class="active">主队 <span id="home-count">0 人</span></button><button id="away-lineup-tab" role="tab" aria-selected="false" aria-controls="lineup-panel">客队 <span id="away-count">0 人</span></button></div>
             <div id="lineup-panel" role="tabpanel" aria-labelledby="home-lineup-tab"><label for="lineup-search" class="sr-only">搜索球员姓名或号码</label><input id="lineup-search" type="search" placeholder="搜索姓名或号码"><div class="lineup-actions"><span id="lineup-count" class="hint"></span><button id="clear-lineup" class="link-button">取消本队首发</button></div><div id="lineup-list" class="lineup-list"></div></div>
           </div>
         </section>
@@ -51,7 +51,7 @@
       </div>
     </aside>
     <main class="preview">
-      <header class="preview-header"><div><h2>实时预览</h2><p>首发、事件与比分同步更新</p></div><div class="preview-actions"><button id="download-svg" class="secondary">导出 SVG</button><button id="download-png" class="primary">↓ 导出 PNG</button><button id="new-match" class="danger">新比赛</button></div></header>
+      <header class="preview-header"><div><h2>实时预览</h2><p id="preview-sync-hint">首发、事件与比分同步更新</p></div><div class="preview-actions"><button id="download-svg" class="secondary">导出 SVG</button><button id="download-png" class="primary">↓ 导出 PNG</button><button id="new-match" class="danger">新比赛</button></div></header>
       <div class="preview-body"><div class="poster-wrap"><div id="poster"></div><p class="preview-note">导出图片仅包含赛果图，不包含编辑面板。PNG 为 2 倍清晰度。</p></div></div>
     </main>
   </div>

@@ -1,4 +1,4 @@
-import {validateRecords} from './core.mjs';
+import {validateRecords} from './core.mjs?v=20261028-women';
 const WORD='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 function wordDocument(xml) {
@@ -14,8 +14,10 @@ function wordDocument(xml) {
 }
 
 export function registrationTableToRecords(rows,{tournament,team}) {
-  if(!rows.length || rows[0].length!==10 || String(rows[0][0]).replace(/\s/g,'')!=='姓名' || String(rows[0][5]).replace(/\s/g,'')!=='姓名')throw new Error('名单表格应为包含左右两组姓名的 10 列表格。');
-  const records=rows.slice(1).flatMap((row,index)=>[0,5].flatMap(column=>{
+  const headers=rows[0]?.map(value=>String(value).replace(/\s/g,''))||[];
+  const columns=headers.length===10 && headers[0]==='姓名' && headers[5]==='姓名'?[0,5]:headers.length===6 && headers[0]==='序号' && headers[1]==='球员姓名'?[1]:null;
+  if(!columns)throw new Error('名单表格应为左右双栏报名表，或含“序号、球员姓名”的六列表格。');
+  const records=rows.slice(1).flatMap((row,index)=>columns.flatMap(column=>{
     const name=String(row[column]??'').trim();
     return name?[{tournament,team,name,number:'',sourceRow:index+2}]:[];
   }));
@@ -56,7 +58,7 @@ async function loadTournament(tournament,manifestUrl) {
   return records;
 }
 
-export async function loadOfficialRosters(manifestUrl) {
+export async function loadOfficialData(manifestUrl) {
   const response=await fetch(manifestUrl,{cache:'no-cache'});
   if(!response.ok)throw new Error(`官方名单清单加载失败（${response.status}）。`);
   const manifest=await response.json();
@@ -64,5 +66,9 @@ export async function loadOfficialRosters(manifestUrl) {
   for(const tournament of manifest.tournaments)if(!tournament.name || !(tournament.roster || (tournament.directory && Array.isArray(tournament.files) && tournament.files.length)))throw new Error('官方名单清单缺少赛事或名单文件。');
   const records=(await Promise.all(manifest.tournaments.map(tournament=>loadTournament(tournament,manifestUrl)))).flat();
   validateRecords(records);
-  return records;
+  return {records,tournaments:manifest.tournaments.map(({name,lineups})=>({name,lineups:lineups!==false}))};
+}
+
+export async function loadOfficialRosters(manifestUrl) {
+  return (await loadOfficialData(manifestUrl)).records;
 }

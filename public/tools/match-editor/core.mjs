@@ -17,6 +17,7 @@ export function setGoalkeeper(match,records,side,id) {
   match.goalkeepers||={home:'',away:''};match.goalkeepers[side]=id;
 }
 export function missingGoalkeepers(match,records) {
+  if(match.lineupsEnabled===false)return [];
   return ['home','away'].filter(side=>!match.goalkeepers?.[side] || !rosterFor(records,match,side).some(p=>isGoalkeeper(match,side,p))).map(side=>match[side]||(side==='home'?'主队':'客队'));
 }
 export function previousNumber(history,id,matchId) {
@@ -48,7 +49,7 @@ export function setMatchNumber(match,records,side,id,value) {
 }
 export function missingNumbers(match,records) {
   return ['home','away'].flatMap(side=>{
-    const used=new Set([...(match.showLineups?match.starters[side]:[]),...match.events.filter(ev=>ev.side===side).map(ev=>ev.playerId)]);
+    const used=new Set([...(match.lineupsEnabled!==false && match.showLineups?match.starters[side]:[]),...match.events.filter(ev=>ev.side===side).map(ev=>ev.playerId)]);
     return rosterFor(records,match,side).filter(p=>used.has(playerId(p)) && !isGoalkeeper(match,side,p) && !matchNumber(match,side,p)).map(p=>`${match[side]} · ${p.name}`);
   });
 }
@@ -228,7 +229,7 @@ export function renderPoster(match,records,icons={}) {
   body.splice(titleLines.length+4,0,`<line x1="400" y1="${start}" x2="400" y2="${y}" stroke="#8c0000" stroke-width="2"/>`);
   body.push(`<circle cx="400" cy="${y}" r="5" fill="#8c0000"/>`,text(400,y+31,'全场结束',14,'#27a551','middle'));
   y+=61;
-  if(match.showLineups) {
+  if(match.lineupsEnabled!==false && match.showLineups) {
     body.push(`<line x1="24" y1="${y}" x2="776" y2="${y}" stroke="#e1e3e8"/>`,text(400,y+35,'首发阵容',20,'#323745','middle',600));y+=68;
     const selected={};
     for(const side of ['home','away']){
@@ -252,5 +253,5 @@ export function renderPoster(match,records,icons={}) {
   body.push(`<rect y="${y}" width="800" height="48" fill="#f0f0f3"/>`);
   ['进球','点球','乌龙'].forEach((type,i)=>{const x=200+i*165;if(icons[type])body.push(`<image href="${e(icons[type])}" x="${x}" y="${y+13}" width="22" height="22"/>`);body.push(text(x+30,y+30,type==='乌龙'?'乌龙球':type,17));});
   const height=y+48;
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-label="${match.showLineups?'比赛赛果与首发阵容':'比赛赛果'}"><rect width="800" height="${height}" fill="#f7f7f8"/><g font-family="PingFang SC,Microsoft YaHei,Arial,sans-serif">${body.join('')}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${height}" viewBox="0 0 ${W} ${height}" role="img" aria-label="${match.lineupsEnabled!==false && match.showLineups?'比赛赛果与首发阵容':'比赛赛果'}"><rect width="800" height="${height}" fill="#f7f7f8"/><g font-family="PingFang SC,Microsoft YaHei,Arial,sans-serif">${body.join('')}</g></svg>`;
 }

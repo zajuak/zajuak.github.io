@@ -4,6 +4,11 @@
     {
       "name": "2026新生杯",
       "roster": "rosters/tournament-1.json"
+    },
+    {
+      "name": "2026-27五人制女足北大杯",
+      "roster": "rosters/tournament-2.json",
+      "lineups": false
     }
   ]
 }

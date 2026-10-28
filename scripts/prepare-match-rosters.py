@@ -35,9 +35,14 @@ def extract(path):
             if span is not None:
                 values.extend([""] * (int(span.get(f"{{{WORD}}}val", "1")) - 1))
         rows.append(values)
-    if not rows or len(rows[0]) != 10 or any(re.sub(r"\s", "", rows[0][i]) != "姓名" for i in (0, 5)):
-        raise ValueError(f"{path.name}: 不是左右双栏报名表")
-    names = [row[i].strip() for row in rows[1:] for i in (0, 5) if len(row) > i and row[i].strip()]
+    headers = [re.sub(r"\s", "", value) for value in rows[0]] if rows else []
+    if len(headers) == 10 and all(headers[i] == "姓名" for i in (0, 5)):
+        name_columns = (0, 5)
+    elif len(headers) == 6 and headers[:2] == ["序号", "球员姓名"]:
+        name_columns = (1,)
+    else:
+        raise ValueError(f"{path.name}: 不支持的报名表表头")
+    names = [row[i].strip() for row in rows[1:] for i in name_columns if len(row) > i and row[i].strip()]
     if not names or len(names) != len(set(names)):
         raise ValueError(f"{path.name}: 名单为空或存在同名球员")
     # The allowlist deliberately excludes phone numbers, notes and document metadata.
@@ -65,7 +70,10 @@ def main():
         target = args.destination / roster
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
-        manifest["tournaments"].append({"name": tournament["name"], "roster": roster})
+        entry = {"name": tournament["name"], "roster": roster}
+        if tournament.get("lineups") is False:
+            entry["lineups"] = False
+        manifest["tournaments"].append(entry)
         print(f"{tournament['name']}: {len(teams)} 支球队，{len(records)} 名球员；仅输出球队与姓名")
     args.destination.mkdir(parents=True, exist_ok=True)
     (args.destination / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
