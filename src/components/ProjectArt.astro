@@ -4,7 +4,11 @@ const { type } = Astro.props;
 <svg viewBox="0 0 540 220" aria-hidden="true" class:list={['project-art', type]}>
   <defs><pattern id={`grid-${type}`} width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0v24" fill="none" stroke="currentColor" stroke-width=".5" opacity=".12"/></pattern></defs>
   <rect width="540" height="220" fill={`url(#grid-${type})`}/>
-  {type === 'compiler' ? <>
+  {type === 'football' ? <>
+    <g stroke="currentColor" fill="none" opacity=".6" stroke-width="1.2"><rect x="105" y="35" width="330" height="150" rx="3"/><path d="M270 35v150m-165-115h58v80h-58m330-80h-58v80h58"/><circle cx="270" cy="110" r="33"/><circle cx="270" cy="110" r="3" fill="currentColor"/></g>
+    <g fill="currentColor" opacity=".7">{[[200,75],[220,140],[330,80],[348,145]].map(([x,y])=><circle cx={x} cy={y} r="6"/>)}</g>
+    <text x="270" y="211" font-size="8" letter-spacing="3" text-anchor="middle" fill="currentColor" font-family="monospace">LINEUP · MOMENTS · RESULT</text>
+  </> : type === 'compiler' ? <>
     <g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".6"><path d="M90 110h85m65 0h75m65 0h72M200 75v-25m0 100v25m140-100v-25m0 100v25"/><path d="m165 105 10 5-10 5m140-10 10 5-10 5m127-10 10 5-10 5"/><rect x="55" y="84" width="55" height="52" rx="3"/><rect x="175" y="65" width="65" height="90" rx="3"/><rect x="315" y="65" width="65" height="90" rx="3"/><rect x="442" y="84" width="45" height="52" rx="3"/></g>
     <g font-family="monospace" fill="currentColor" text-anchor="middle"><text x="82" y="115" font-size="17">{'{ }'}</text><text x="208" y="112" font-size="19">IR</text><text x="348" y="113" font-size="17">01</text><text x="465" y="115" font-size="17">↗</text><text x="208" y="46" font-size="8" letter-spacing="2">PARSE</text><text x="348" y="46" font-size="8" letter-spacing="2">COMPILE</text><text x="208" y="184" font-size="8" letter-spacing="2">ABSTRACTION</text><text x="348" y="184" font-size="8" letter-spacing="2">INSTRUCTION</text></g>
   </> : <>

@@ -29,6 +29,8 @@ jobs:
         run: npm ci
       - name: Check Astro and TypeScript
         run: npm run check
+      - name: Check match editor data logic
+        run: npm run test:match-editor
       - name: Build static site
         run: npm run build
       - name: Configure Pages
