@@ -1,7 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import Icon from '../components/Icon.astro';
-import { projects,site } from '../data/site';
+import RepositoryList from '../components/RepositoryList.astro';
+import { projects } from '../data/site';
 ---
-<Base title="项目" active="projects"><div class="container page-container"><header class="page-heading"><p class="eyebrow">THE WORKSHOP</p><h1>从想法，到实现<span class="heading-dot">.</span></h1><p>一些课程实践，一些动手探索。理解世界，也试着构建一点什么。</p></header><div class="workshop-label"><span><span class="status-dot"></span> 公开的学习与实践</span><span>{String(projects.length).padStart(2,'0')} PROJECTS</span></div><div class="projects-grid full-projects">{projects.map(project=><ProjectCard project={project}/>)}</div><section class="github-callout"><Icon name="github" size={30}/><div><h2>更多代码，留在 GitHub</h2><p>查看公开仓库、课程记录与持续更新的实践。</p></div><a href={site.github} target="_blank" rel="noopener noreferrer" class="button button-outline">前往 GitHub <Icon name="external" size={17}/></a></section></div></Base>
+<Base title="项目" active="projects">
+  <div class="container page-container projects-page">
+    <header class="page-heading"><h1>项目</h1></header>
+    <section class="featured-tools" aria-label="在线工具">{projects.map(project => <ProjectCard project={project}/>)}</section>
+    <section class="github-repositories" aria-labelledby="repositories-title"><h2 id="repositories-title" class="repository-section-title">GitHub 仓库</h2><RepositoryList/></section>
+  </div>
+</Base>

@@ -1,0 +1,16 @@
+---
+import Icon from './Icon.astro';
+import { repositories } from '../data/repositories';
+---
+
+<ul class="repository-list">
+  {repositories.map(repository => (
+    <li>
+      <a href={repository.href} target="_blank" rel="noopener noreferrer">
+        <div class="repository-heading"><Icon name="github" size={17}/><h3>{repository.name}</h3>{repository.fork && <span class="repository-fork">Fork</span>}<Icon name="external" size={15}/></div>
+        {repository.description && <p class="repository-description">{repository.description}</p>}
+        {repository.language && <span class="repository-language"><i aria-hidden="true"></i>{repository.language}</span>}
+      </a>
+    </li>
+  ))}
+</ul>

@@ -9,32 +9,15 @@ export const site = {
 
 export const projects = [
   {
-    title: '足球赛果图编辑器',
+    title: '赛果图编辑器',
     subtitle: 'FOOTBALL MATCH EDITOR',
     description: '导入 Word、Excel 或 CSV 姓名名单，逐场填写号码并参考上次记录，选择首发与比赛事件，导出赛果图。',
     tags: ['在线工具', '足球赛果图'],
     href: url('tools/match-editor/'),
     art: 'football',
-    number: '03',
-  },
-  {
-    title: '从语言到机器',
-    subtitle: 'COMPILER CONSTRUCTION',
-    description: '编译原理课程实践，沿着语法分析、中间表示与代码生成，理解程序如何成为机器指令。',
-    tags: ['编译原理', '课程实践'],
-    href: 'https://github.com/zajuak/Compiler-Principle-lab-PKU2026Fall',
-    art: 'compiler',
     number: '01',
   },
-  {
-    title: '从光影到形状',
-    subtitle: 'COMPUTATIONAL PHOTOGRAPHY',
-    description: '计算摄像学课程中的光度立体视觉作业，探索光照、表面法线与三维形状之间的联系。',
-    tags: ['计算摄像学', 'Photometric Stereo'],
-    href: 'https://github.com/zajuak/PKU-Computational-Photography-assignment-7--Photometric-Stereo',
-    art: 'vision',
-    number: '02',
-  },
+
 ];
 
 export function url(path = '') {

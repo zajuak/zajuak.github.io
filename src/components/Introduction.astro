@@ -1,15 +1,10 @@
 ---
-import Icon from './Icon.astro';
 import { site } from '../data/site';
 ---
 
 <section class="profile-section introduction" aria-labelledby="introduction-title">
   <header class="section-rail"><h2 id="introduction-title">自我介绍</h2><p>ABOUT ME</p></header>
   <div class="section-body introduction-copy">
-    <p class="introduction-tagline">对世界保持好奇，对理解保持耐心。</p>
-    <p>我在计算机科学的世界里学习与探索，关注机器学习、计算机系统，以及把抽象概念变成可运行程序的过程。</p>
-    <p>我喜欢从一个具体的问题出发：它为什么这样工作？边界在哪里？能不能亲手实现一遍？写下推导、检查代码、再把理解讲清楚，是我整理知识的方式。</p>
-    <p>这个网站是一块持续生长的数字花园。这里会留下学习笔记、课程实践与尚在形成的想法。比起一个完美的答案，我更想保留走向答案的过程。</p>
-    <a class="text-link" href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18}/> 在 GitHub 找到我 <Icon name="arrow" size={17}/></a>
+    <p class="introduction-greeting">Hi~这里是{site.name}!</p>
   </div>
 </section>
