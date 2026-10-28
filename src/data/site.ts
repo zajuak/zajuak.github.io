@@ -13,7 +13,7 @@ export const projects = [
     subtitle: 'FOOTBALL MATCH EDITOR',
     description: '',
     tags: ['在线工具', '足球赛果图'],
-    href: url('tools/match-editor/'),
+    href: 'https://zajuak.github.io/match-editor/',
     art: 'football',
     number: '01',
   },
