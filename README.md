@@ -26,7 +26,7 @@ npm run preview
 ## 修改内容
 
 - `src/data/site.ts`：个人资料、社交链接、项目。
-- `src/data/friends.ts`：友链的名称、简介和网址；初始为空。
+- `src/data/friends.ts`：友链的名称、简介、网址和可选头像 `image`。
 - `src/data/repositories.ts`：公开 GitHub 仓库快照，保留仓库名、简介、语言和 Fork 标记；不包含私有仓库。
 - `src/content/notes/*.md`：Markdown 手记。
 - `src/styles/global.css`：颜色、排版、响应式样式。
