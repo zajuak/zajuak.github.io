@@ -11,7 +11,7 @@ export const repositories: Repository[] = [
   {
     "name": "Compiler-Principle-lab-PKU2026Fall",
     "href": "https://github.com/zajuak/Compiler-Principle-lab-PKU2026Fall",
-    "description": "",
+    "description": "2026Fall 编译原理lab",
     "language": "C++",
     "fork": false
   },
@@ -39,14 +39,14 @@ export const repositories: Repository[] = [
   {
     "name": "-TriDoS",
     "href": "https://github.com/zajuak/-TriDoS",
-    "description": "",
+    "description": "2025Spring  程序设计实习 大作业",
     "language": "C++",
     "fork": false
   },
   {
     "name": "wuziqi",
     "href": "https://github.com/zajuak/wuziqi",
-    "description": "",
+    "description": "2024Fall 计算概论A 五子棋大作业",
     "language": "C++",
     "fork": false
   },
@@ -60,7 +60,7 @@ export const repositories: Repository[] = [
   {
     "name": "zajuak.github.io",
     "href": "https://github.com/zajuak/zajuak.github.io",
-    "description": "个人网站源码。",
+    "description": "zajuka 的数字手记 · Computer Science, Machine Learning & Systems",
     "language": "JavaScript",
     "fork": false
   }

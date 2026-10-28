@@ -11,7 +11,7 @@ export const projects = [
   {
     title: '赛果图编辑器',
     subtitle: 'FOOTBALL MATCH EDITOR',
-    description: '导入 Word、Excel 或 CSV 姓名名单，逐场填写号码并参考上次记录，选择首发与比赛事件，导出赛果图。',
+    description: '',
     tags: ['在线工具', '足球赛果图'],
     href: url('tools/match-editor/'),
     art: 'football',

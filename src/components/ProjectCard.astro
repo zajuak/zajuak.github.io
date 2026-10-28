@@ -8,5 +8,5 @@ const external = /^https?:\/\//.test(project.href);
 ---
 <a class="project-card" href={project.href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
   <div class="project-image"><ProjectArt type={project.art}/><span class="project-number">EXPERIMENT / {project.number}</span><span class="project-open"><Icon name="external" size={17}/></span></div>
-  <div class="project-copy"><p class="eyebrow">{project.subtitle}</p><h3>{project.title}<Icon name="arrow"/></h3><p>{project.description}</p><div class="tags">{project.tags.map(tag=><span>{tag}</span>)}</div></div>
+  <div class="project-copy"><p class="eyebrow">{project.subtitle}</p><h3>{project.title}<Icon name="arrow"/></h3>{project.description && <p>{project.description}</p>}<div class="tags">{project.tags.map(tag=><span>{tag}</span>)}</div></div>
 </a>
