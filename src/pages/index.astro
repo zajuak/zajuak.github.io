@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import GardenArt from '../components/GardenArt.astro';
+import Introduction from '../components/Introduction.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { projects, site, url } from '../data/site';
 ---
@@ -12,6 +13,7 @@ import { projects, site, url } from '../data/site';
       <GardenArt/>
     </section>
     <div class="intro-strip"><span class="strip-label"><span class="small-star">✳</span> 一块持续生长的数字花园</span><p>写下值得记住的事，也为尚未理解的事留一点空间。</p><span class="strip-index">EST. 2026</span></div>
+    <Introduction/>
     <section class="selected-projects" aria-labelledby="projects-title"><div class="section-heading"><div><p class="eyebrow">LEARNING BY BUILDING</p><h2 id="projects-title">把想法做出来<span class="heading-dot">.</span></h2></div><a class="small-link" href={url('projects/')}>探索项目 <Icon name="arrow" size={17}/></a></div><div class="projects-grid">{projects.map(project=><ProjectCard project={project}/>)}</div></section>
     <section class="about-strip"><span class="about-strip-mark" aria-hidden="true">↳</span><div><p class="eyebrow">FRIENDS & CONNECTIONS</p><h2>友链</h2><p>朋友们的网站与博客。</p></div><a href={url('links/')} class="button button-outline">查看友链 <Icon name="arrow" size={17}/></a></section>
   </div>
