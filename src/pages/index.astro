@@ -1,20 +1,28 @@
 ---
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
-import GardenArt from '../components/GardenArt.astro';
 import Introduction from '../components/Introduction.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { projects, site, url } from '../data/site';
 ---
 <Base active="home">
   <div class="container">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy"><p class="eyebrow hero-eyebrow"><span class="status-dot"></span> HELLO, I'M JUN KAI</p><h1 id="hero-title">保持好奇，<br/><span>让想法生长。</span><span class="hero-asterisk" aria-hidden="true">✳</span></h1><p class="hero-intro">你好，我是赵俊凯。<br/>在计算机科学的世界里探索，<br class="mobile-break"/>记录学习、思考与创造的过程。</p><div class="hero-buttons"><a class="button button-primary" href={url('projects/')}>查看我的项目 <Icon name="arrow" size={18}/></a><a class="text-link" href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18}/> GitHub <span>↗</span></a></div><div class="hero-footnote"><span>COMPUTER SCIENCE</span><i></i><span>A WORK IN PROGRESS</span></div></div>
-      <GardenArt/>
+    <section class="profile-hero" aria-labelledby="hero-title">
+      <div class="profile-avatar" aria-hidden="true"><span>JZ</span></div>
+      <h1 id="hero-title">赵俊凯<span>Junkai Zhao</span></h1>
+      <p class="profile-interests">计算机科学 <span>·</span> 机器学习 <span>·</span> 计算机系统</p>
+      <div class="profile-socials"><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={17}/> GitHub <Icon name="external" size={13}/></a><a href={url('rss.xml')}><Icon name="rss" size={16}/> RSS</a></div>
     </section>
-    <div class="intro-strip"><span class="strip-label"><span class="small-star">✳</span> 一块持续生长的数字花园</span><p>写下值得记住的事，也为尚未理解的事留一点空间。</p><span class="strip-index">EST. 2026</span></div>
-    <Introduction/>
-    <section class="selected-projects" aria-labelledby="projects-title"><div class="section-heading"><div><p class="eyebrow">LEARNING BY BUILDING</p><h2 id="projects-title">把想法做出来<span class="heading-dot">.</span></h2></div><a class="small-link" href={url('projects/')}>探索项目 <Icon name="arrow" size={17}/></a></div><div class="projects-grid">{projects.map(project=><ProjectCard project={project}/>)}</div></section>
-    <section class="about-strip"><span class="about-strip-mark" aria-hidden="true">↳</span><div><p class="eyebrow">FRIENDS & CONNECTIONS</p><h2>友链</h2><p>朋友们的网站与博客。</p></div><a href={url('links/')} class="button button-outline">查看友链 <Icon name="arrow" size={17}/></a></section>
+    <div class="profile-content">
+      <Introduction/>
+      <section class="profile-section home-projects" aria-labelledby="projects-title">
+        <header class="section-rail"><h2 id="projects-title">项目</h2><p>PROJECTS</p></header>
+        <div class="section-body"><div class="home-project-list">{projects.map(project=><ProjectCard project={project}/>)}</div><div class="section-tail"><a class="small-link" href={url('projects/')}>全部项目 <Icon name="arrow" size={16}/></a></div></div>
+      </section>
+      <section class="profile-section home-friends" aria-labelledby="friends-title">
+        <header class="section-rail"><h2 id="friends-title">友链</h2><p>CONNECTIONS</p></header>
+        <div class="section-body friends-inline"><p>朋友们的网站与博客。</p><a href={url('links/')} class="button button-outline">查看友链 <Icon name="arrow" size={16}/></a></div>
+      </section>
+    </div>
   </div>
 </Base>
