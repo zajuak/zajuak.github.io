@@ -9,6 +9,20 @@ export interface Repository {
 // 公开仓库快照；不包含私有仓库。
 export const repositories: Repository[] = [
   {
+    "name": "match-editor",
+    "href": "https://github.com/zajuak/match-editor",
+    "description": "足球赛果图编辑器：赛事名单、比赛事件、实时预览与 PNG/SVG 导出",
+    "language": "JavaScript",
+    "fork": false
+  },
+  {
+    "name": "PKU-Software-Analysis-2026Fall-lab-handout",
+    "href": "https://github.com/zajuak/PKU-Software-Analysis-2026Fall-lab-handout",
+    "description": "",
+    "language": "Java",
+    "fork": true
+  },
+  {
     "name": "Compiler-Principle-lab-PKU2026Fall",
     "href": "https://github.com/zajuak/Compiler-Principle-lab-PKU2026Fall",
     "description": "2026Fall 编译原理lab",
@@ -61,7 +75,7 @@ export const repositories: Repository[] = [
     "name": "zajuak.github.io",
     "href": "https://github.com/zajuak/zajuak.github.io",
     "description": "zajuka 的数字手记 · Computer Science, Machine Learning & Systems",
-    "language": "JavaScript",
+    "language": "Astro",
     "fork": false
   }
 ];
