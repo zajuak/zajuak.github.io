@@ -27,12 +27,13 @@ npm run preview
 
 - `src/data/site.ts`：个人资料、社交链接、项目。
 - `src/data/friends.ts`：友链的名称、简介、网址和可选头像 `image`。
-- `src/data/repositories.ts`：公开 GitHub 仓库快照，保留仓库名、简介、语言和 Fork 标记；不包含私有仓库。
+- `src/data/repositories.json`：公开 GitHub 仓库快照，保留仓库名、简介、语言和 Fork 标记，由同步脚本更新。
+- `src/data/repositories.ts`：仓库数据的类型与导出。
 - `src/content/notes/*.md`：Markdown 手记。
 - `src/styles/global.css`：颜色、排版、响应式样式。
 - `src/components/Introduction.astro`：首页问候语。
 - `src/components/Education.astro`：教育经历。
-- `src/components/RepositoryList.astro`：首页与项目页共用的公开仓库列表。
+- `src/components/RepositoryList.astro`：项目页的公开仓库列表。
 - `src/components/GardenArt.astro`、`ProjectArt.astro`：原创 SVG 插画。
 
 新增手记示例：
@@ -58,6 +59,16 @@ order: 4
 目标仓库：`zajuak/zajuak.github.io`；目标地址：`https://zajuak.github.io/`。
 
 在仓库 Settings → Pages → Build and deployment 中选择 **GitHub Actions**，推送到 `main` 后 `.github/workflows/deploy.yml` 会执行依赖安装、类型检查、静态构建与部署。
+
+### 自动同步 GitHub 仓库
+
+部署工作流每 6 小时运行一次，每次推送或手动运行时也会通过 GitHub REST API 获取 `zajuak` 的最新公开仓库、简介、主要语言和 Fork 标记，然后构建并发布网站。`match-editor` 由独立工具入口展示，不重复加入仓库列表；私有仓库不会展示。新仓库置顶，已有仓库保持原有顺序，删除或转为私有的仓库会从列表移除。
+
+工作流使用 GitHub 自动提供的只读 `GITHUB_TOKEN`，无需配置个人令牌。更新后的快照直接用于当次网站构建，不会产生机器人提交；仓库里保存的 JSON 供本地预览使用。若 API 请求失败，工作流会失败并保留上一次线上版本。
+
+本地刷新数据可运行 `npm run sync:repos`，同步逻辑测试使用 `npm run test:sync`。需要立即更新线上内容时，到 **Actions → Deploy to GitHub Pages → Run workflow** 手动运行。
+
+GitHub 的定时执行可能延迟；公开仓库连续 60 天没有活动时，GitHub 会暂停定时工作流，可在 Actions 中重新启用。
 
 如果改用项目仓库，例如 `personal-site`，构建时设置：
 
