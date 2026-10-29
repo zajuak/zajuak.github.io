@@ -6,15 +6,8 @@ export interface Repository {
   fork: boolean;
 }
 
-// 公开仓库快照；不包含私有仓库。
+// 公开仓库快照；不包含私有仓库，赛果图编辑器由独立入口展示。
 export const repositories: Repository[] = [
-  {
-    "name": "match-editor",
-    "href": "https://github.com/zajuak/match-editor",
-    "description": "足球赛果图编辑器：赛事名单、比赛事件、实时预览与 PNG/SVG 导出",
-    "language": "JavaScript",
-    "fork": false
-  },
   {
     "name": "PKU-Software-Analysis-2026Fall-lab-handout",
     "href": "https://github.com/zajuak/PKU-Software-Analysis-2026Fall-lab-handout",
